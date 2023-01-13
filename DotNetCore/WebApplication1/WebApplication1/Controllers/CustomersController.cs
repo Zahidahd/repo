@@ -148,6 +148,22 @@ namespace WebApplication1.Controllers
 
             return Ok(customerFullName);
         }
+
+        [HttpGet]
+        [Route("GetCustomerFullNameById1/{CustomerId}")]
+        public IActionResult GetCustomerFullNameById1(int customerId)
+        {
+            string stringQuery = @"SELECT Name FROM Customers where id = @customerId";
+
+            var sqlCommand = new SqlCommand(stringQuery, sqlConnection);
+            sqlCommand.Parameters.AddWithValue("@customerId", customerId);
+
+            sqlConnection.Open();
+            string customerFullName = Convert.ToString(sqlCommand.ExecuteScalar());
+            sqlConnection.Close();
+
+            return Ok(customerFullName);
+        }
     }
 }
 
