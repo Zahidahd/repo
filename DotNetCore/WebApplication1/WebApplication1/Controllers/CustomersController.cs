@@ -150,8 +150,8 @@ namespace WebApplication1.Controllers
         }
 
         [HttpGet]
-        [Route("GetCustomerFullNameById1/{CustomerId}")]
-        public IActionResult GetCustomerFullNameById1(int customerId)
+        [Route("GetCustomerFullNameById3/{CustomerId}")]
+        public IActionResult GetCustomerFullNameById3(int customerId)
         {
             string stringQuery = @"SELECT Name FROM Customers where id = @customerId";
 
