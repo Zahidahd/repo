@@ -185,6 +185,22 @@ namespace WebApplication1.Controllers
 
             return Ok(employeeFullName);
         }
+
+        [HttpGet]
+        [Route("GetEmployeeFullNameByName/{EmployeeId}")]
+        public IActionResult GetEmployeeFullNameByName(string employeeName)
+        {
+            string sqlQuery = "SELECT FullName FROM Employees WHERE FullName = @employeeName";
+
+            var sqlCommand = new SqlCommand(sqlQuery, sqlConnection);
+            sqlCommand.Parameters.AddWithValue("@employeeName", employeeName);
+
+            sqlConnection.Open();
+            string employeeFullName = Convert.ToString(sqlCommand.ExecuteScalar());
+            sqlConnection.Close();
+
+            return Ok(employeeFullName);
+        }
     }
 }
 
