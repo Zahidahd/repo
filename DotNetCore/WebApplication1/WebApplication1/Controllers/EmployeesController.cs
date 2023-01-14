@@ -112,7 +112,7 @@ namespace WebApplication1.Controllers
                 return NotFound();
             }
         }
-
+        //Changes done
         [HttpPost]
         [Route("EmployeeRegister")]
         public IActionResult EmployeeRegister([FromBody] EmployeeDto employee)
@@ -139,26 +139,26 @@ namespace WebApplication1.Controllers
                 if (ModelState.IsValid)
 
                     if (ModelState.IsValid)
-                {
-                    string sqlQuery = $@"
+                    {
+                        string sqlQuery = $@"
                     INSERT INTO Employees(FullName, Email, Gender, DateOfJoining, Salary)
                     VALUES (@FullName, @Email, @Gender, @DateOfJoining, @Salary)
                     Select Scope_Identity() ";
 
-                    var sqlCommand = new SqlCommand(sqlQuery, sqlConnection);
-                    sqlCommand.Parameters.AddWithValue("@FullName", employee.FullName);
-                    sqlCommand.Parameters.AddWithValue("@Email", employee.Email);
-                    sqlCommand.Parameters.AddWithValue("@Gender", employee.Gender);
-                    sqlCommand.Parameters.AddWithValue("@DateOfJoining", employee.DateOfJoining);
-                    sqlCommand.Parameters.AddWithValue("@Salary", employee.Salary);
+                        var sqlCommand = new SqlCommand(sqlQuery, sqlConnection);
+                        sqlCommand.Parameters.AddWithValue("@FullName", employee.FullName);
+                        sqlCommand.Parameters.AddWithValue("@Email", employee.Email);
+                        sqlCommand.Parameters.AddWithValue("@Gender", employee.Gender);
+                        sqlCommand.Parameters.AddWithValue("@DateOfJoining", employee.DateOfJoining);
+                        sqlCommand.Parameters.AddWithValue("@Salary", employee.Salary);
 
-                    sqlConnection.Open();
-                    employee.Id = Convert.ToInt32(sqlCommand.ExecuteScalar());
-                    sqlConnection.Close();
+                        sqlConnection.Open();
+                        employee.Id = Convert.ToInt32(sqlCommand.ExecuteScalar());
+                        sqlConnection.Close();
 
-                    
-                    return Ok(employee.Id);
-                }
+
+                        return Ok(employee.Id);
+                    }
                 return BadRequest();
             }
             catch (Exception ex)
@@ -178,22 +178,6 @@ namespace WebApplication1.Controllers
 
             var sqlCommand = new SqlCommand(sqlQuery, sqlConnection);
             sqlCommand.Parameters.AddWithValue("@productId", employeeId);
-
-            sqlConnection.Open();
-            string employeeFullName = Convert.ToString(sqlCommand.ExecuteScalar());
-            sqlConnection.Close();
-
-            return Ok(employeeFullName);
-        }
-
-        [HttpGet]
-        [Route("GetEmployeeFullNameByName/{EmployeeId}")]
-        public IActionResult GetEmployeeFullNameByName(string employeeName)
-        {
-            string sqlQuery = "SELECT FullName FROM Employees WHERE FullName = @employeeName";
-
-            var sqlCommand = new SqlCommand(sqlQuery, sqlConnection);
-            sqlCommand.Parameters.AddWithValue("@employeeName", employeeName);
 
             sqlConnection.Open();
             string employeeFullName = Convert.ToString(sqlCommand.ExecuteScalar());

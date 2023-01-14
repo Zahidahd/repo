@@ -115,7 +115,7 @@ namespace WebApplication1.Controllers
                 return NotFound();
             }
         }
-
+        //Changes done
         [HttpPost]
         [Route("TeacherRegister")]
         public IActionResult TeacherRegister([FromBody] TeacherDto teacherDto)

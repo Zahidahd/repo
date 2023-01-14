@@ -96,7 +96,7 @@ namespace WebApplication1.Controllers
                 return NotFound();
             }
         }
-
+        //Changes done
         [HttpPost]
         [Route("CustomerRegister")]
         public IActionResult CustomerRegister([FromBody] CustomerDto customer)
