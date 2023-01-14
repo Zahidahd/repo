@@ -49,9 +49,9 @@ namespace WebApplication1.Controllers
         public IActionResult GetCustomersCount()
         {
 
-            string stringQuery = "SELECT COUNT(*) FROM Customers ";
+            string sqlQuery = "SELECT COUNT(*) FROM Customers ";
 
-            var sqlCommand = new SqlCommand(stringQuery, sqlConnection);
+            var sqlCommand = new SqlCommand(sqlQuery, sqlConnection);
 
             sqlConnection.Open();
             int customerCount = Convert.ToInt32(sqlCommand.ExecuteScalar());
@@ -82,8 +82,8 @@ namespace WebApplication1.Controllers
         [Route("GetCustomerDetailByGenderBYCountry/{gender}/{country}")]
         public IActionResult GetCustomerDetailByGenderBYCountry(string gender, string country)
         {
-            string stringQuery = $"SELECT * FROM Customers WHERE Gender ='{gender}' AND Country = '{country}' ";
-            SqlDataAdapter sqlDataAdapter = new(stringQuery, sqlConnection);
+            string sqlQuery = $"SELECT * FROM Customers WHERE Gender ='{gender}' AND Country = '{country}' ";
+            SqlDataAdapter sqlDataAdapter = new(sqlQuery, sqlConnection);
             DataTable dataTable = new();
             sqlDataAdapter.Fill(dataTable);
 
@@ -103,14 +103,27 @@ namespace WebApplication1.Controllers
         {
             try
             {
+                if (string.IsNullOrWhiteSpace(customer.FullName))
+                {
+                    return BadRequest("Name can not be blank");
+                }
+                if (customer.FullName.Length < 3 || customer.FullName.Length > 30)
+                {
+                    return BadRequest("Name should be between 3 and 30 characters.");
+                }
+                if(customer.Age <= 18)
+                {
+                    return BadRequest("Invalid age, customer age should be above 18");
+                }
+
                 if (ModelState.IsValid)
                 {   
-                    string stringQuery = $@"
+                    string sqlQuery = $@"
                     INSERT INTO Customers(Name, Gender, Age, Country)
                     VALUES (@FullName, @Gender, @Age, @Country)
                     Select Scope_Identity() ";
 
-                    var sqlCommand = new SqlCommand(stringQuery, sqlConnection);
+                    var sqlCommand = new SqlCommand(sqlQuery, sqlConnection);
                     sqlCommand.Parameters.AddWithValue("@FullName", customer.FullName);
                     sqlCommand.Parameters.AddWithValue("@Gender", customer.Gender);
                     sqlCommand.Parameters.AddWithValue("@Age", customer.Age);
@@ -137,25 +150,9 @@ namespace WebApplication1.Controllers
         [Route("GetCustomerFullNameById/{CustomerId}")]
         public IActionResult GetCustomerFullNameById(int customerId)
         {
-            string stringQuery = @"SELECT Name FROM Customers where id = @customerId";
+            string sqlQuery = @"SELECT Name FROM Customers where id = @customerId";
 
-            var sqlCommand = new SqlCommand(stringQuery, sqlConnection);
-            sqlCommand.Parameters.AddWithValue("@customerId", customerId);
-
-            sqlConnection.Open();
-            string customerFullName = Convert.ToString(sqlCommand.ExecuteScalar());
-            sqlConnection.Close();
-
-            return Ok(customerFullName);
-        }
-
-        [HttpGet]
-        [Route("GetCustomerFullNameById3/{CustomerId}")]
-        public IActionResult GetCustomerFullNameById3(int customerId)
-        {
-            string stringQuery = @"SELECT Name FROM Customers where id = @customerId";
-
-            var sqlCommand = new SqlCommand(stringQuery, sqlConnection);
+            var sqlCommand = new SqlCommand(sqlQuery, sqlConnection);
             sqlCommand.Parameters.AddWithValue("@customerId", customerId);
 
             sqlConnection.Open();

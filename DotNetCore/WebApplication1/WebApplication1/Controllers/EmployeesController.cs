@@ -44,9 +44,9 @@ namespace WebApplication1.Controllers
         [Route("GetEmployeesCount")]
         public IActionResult GetEmployeesCount()
         {
-            string stringQuery = "SELECT COUNT(*) FROM Employees ";
+            string sqlQuery = "SELECT COUNT(*) FROM Employees ";
 
-            var sqlCommand = new SqlCommand(stringQuery, sqlConnection);
+            var sqlCommand = new SqlCommand(sqlQuery, sqlConnection);
 
             sqlConnection.Open();
             int employeeCount = Convert.ToInt32(sqlCommand.ExecuteScalar());
@@ -77,8 +77,8 @@ namespace WebApplication1.Controllers
         [Route("GetEmployeeDetail/{gender}/{salary}")]
         public IActionResult GetEmployeeDetailByGenderBySalary(string gender, int salary)
         {
-            string stringQuery = $"SELECT * FROM Employees WHERE Gender = '{gender}' AND Salary > '{salary}' ";
-            SqlDataAdapter sqlDataAdapter = new(stringQuery, sqlConnection);
+            string sqlQuery = $"SELECT * FROM Employees WHERE Gender = '{gender}' AND Salary > '{salary}' ";
+            SqlDataAdapter sqlDataAdapter = new(sqlQuery, sqlConnection);
             DataTable dataTable = new();
             sqlDataAdapter.Fill(dataTable);
 
@@ -96,10 +96,10 @@ namespace WebApplication1.Controllers
         [Route("GetEmployeeBySalaryRange/{minimumSalary}/{maximumSalary}")]
         public IActionResult GetEmployeeBySalaryRange(int minimumSalary, int maximumSalary)
         {
-            string stringQuery = $@" SELECT * FROM Employees 
+            string sqlQuery = $@" SELECT * FROM Employees 
                                     WHERE Salary BETWEEN {minimumSalary} AND {maximumSalary}
                                     ORDER BY Salary ";
-            SqlDataAdapter sqlDataAdapter = new(stringQuery, sqlConnection);
+            SqlDataAdapter sqlDataAdapter = new(sqlQuery, sqlConnection);
             DataTable dataTable = new();
             sqlDataAdapter.Fill(dataTable);
 
@@ -119,14 +119,33 @@ namespace WebApplication1.Controllers
         {
             try
             {
-                if (ModelState.IsValid)
+                //if (!employee.Email.Contains(@" ^([\w\.\-]+)@([\w\-]+)((\.(\w){2,3})+)$"))
+                //{
+                //    return BadRequest("Email is invalid");
+                //}
+                if (string.IsNullOrWhiteSpace(employee.FullName))
                 {
-                    string stringQuery = $@"
+                    return BadRequest("Name can not be blank");
+                }
+                if (employee.FullName.Length < 3 || employee.FullName.Length > 30)
+                {
+                    return BadRequest("Name should be between 3 and 30 characters.");
+                }
+                if (employee.Salary < 15000)
+                {
+                    return BadRequest("Invalid salary, Employee salary should be above 15000");
+                }
+
+                if (ModelState.IsValid)
+
+                    if (ModelState.IsValid)
+                {
+                    string sqlQuery = $@"
                     INSERT INTO Employees(FullName, Email, Gender, DateOfJoining, Salary)
                     VALUES (@FullName, @Email, @Gender, @DateOfJoining, @Salary)
                     Select Scope_Identity() ";
 
-                    var sqlCommand = new SqlCommand(stringQuery, sqlConnection);
+                    var sqlCommand = new SqlCommand(sqlQuery, sqlConnection);
                     sqlCommand.Parameters.AddWithValue("@FullName", employee.FullName);
                     sqlCommand.Parameters.AddWithValue("@Email", employee.Email);
                     sqlCommand.Parameters.AddWithValue("@Gender", employee.Gender);
@@ -137,6 +156,7 @@ namespace WebApplication1.Controllers
                     employee.Id = Convert.ToInt32(sqlCommand.ExecuteScalar());
                     sqlConnection.Close();
 
+                    
                     return Ok(employee.Id);
                 }
                 return BadRequest();
@@ -154,9 +174,9 @@ namespace WebApplication1.Controllers
         [Route("GetEmployeeFullNameById/{EmployeeId}")]
         public IActionResult GetEmployeeFullNameById(int employeeId)
         {
-            string stringQuery = "SELECT FullName FROM Employees WHERE Id = @productId";
+            string sqlQuery = "SELECT FullName FROM Employees WHERE Id = @productId";
 
-            var sqlCommand = new SqlCommand(stringQuery, sqlConnection);
+            var sqlCommand = new SqlCommand(sqlQuery, sqlConnection);
             sqlCommand.Parameters.AddWithValue("@productId", employeeId);
 
             sqlConnection.Open();

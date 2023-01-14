@@ -44,10 +44,10 @@ namespace WebApplication1.Controllers
         [Route("GetProductsCount")]
         public IActionResult GetProductsCount()
         {
-            string stringQuery = "SELECT COUNT(*) FROM Products ";
+            string sqlQuery = "SELECT COUNT(*) FROM Products ";
 
-            var sqlCommand = new SqlCommand(stringQuery, sqlConnection);
-                
+            var sqlCommand = new SqlCommand(sqlQuery, sqlConnection);
+
             sqlConnection.Open();
             int productCount = Convert.ToInt32(sqlCommand.ExecuteScalar());
             sqlConnection.Close();
@@ -62,7 +62,7 @@ namespace WebApplication1.Controllers
             SqlDataAdapter sqlDataAdapter = new("SELECT * FROM Products WHERE Id =" + productId, sqlConnection);
             DataTable dataTable = new();
             sqlDataAdapter.Fill(dataTable);
-                
+
             if (dataTable.Rows.Count > 0)
             {
                 return Ok(JsonConvert.SerializeObject(dataTable));
@@ -77,8 +77,8 @@ namespace WebApplication1.Controllers
         [Route("GetProducts/{brandName}/{priceUpto}")]
         public IActionResult GetProductsDetailByBrandNameByPriceUpto(string brandName, int priceUpto)
         {
-            string stringQuery = $" SELECT * FROM Products WHERE BrandName = '{brandName}' AND Price <= '{priceUpto}' ";
-            SqlDataAdapter sqlDataAdapter = new(stringQuery, sqlConnection);
+            string sqlQuery = $" SELECT * FROM Products WHERE BrandName = '{brandName}' AND Price <= '{priceUpto}' ";
+            SqlDataAdapter sqlDataAdapter = new(sqlQuery, sqlConnection);
             DataTable dataTable = new();
             sqlDataAdapter.Fill(dataTable);
 
@@ -96,10 +96,10 @@ namespace WebApplication1.Controllers
         [Route("GetProductsByPriceRange/{minimumPrice}/{maximumPrice}")]
         public IActionResult GetProductsByPriceRange(int minimumPrice, int maximumPrice)
         {
-            string stringQuery = $@" SELECT * FROM Products 
+            string sqlQuery = $@" SELECT * FROM Products 
                                     WHERE Price BETWEEN {minimumPrice} AND {maximumPrice}
                                     ORDER BY Price ";
-            SqlDataAdapter sqlDataAdapter = new(stringQuery, sqlConnection);
+            SqlDataAdapter sqlDataAdapter = new(sqlQuery, sqlConnection);
             DataTable dataTable = new();
             sqlDataAdapter.Fill(dataTable);
 
@@ -117,33 +117,34 @@ namespace WebApplication1.Controllers
         [Route("GetDeliverableProductsByPincode/{pincode}")]
         public IActionResult GetDeliverableProductsByPincode(int pincode)
         {
-            string stringQuery = $" SELECT * FROM Products WHERE Pincode = '{pincode}'";
-            SqlDataAdapter sqlDataAdapter = new(stringQuery, sqlConnection);
+            string sqlQuery = $" SELECT * FROM Products WHERE Pincode = '{pincode}'";
+            SqlDataAdapter sqlDataAdapter = new(sqlQuery, sqlConnection);
             DataTable dataTable = new();
             sqlDataAdapter.Fill(dataTable);
 
             if (dataTable.Rows.Count > 0)
             {
                 return Ok(JsonConvert.SerializeObject(dataTable));
-            }   
+            }
             else
             {
                 return NotFound();
             }
         }
 
+        // This code is not working please help
         [HttpGet]
         [Route("GetProductsDetail/{brandName}/{productName}")]
         public IActionResult GetProductsDetailByProductNameBrandName(string brandName, string productName)
         {
-            string stringQuery = $"SELECT * FROM Products WHERE BrandName Like '%{brandName}%' ";
+            string sqlQuery = $"SELECT * FROM Products WHERE BrandName Like '%{brandName}%' ";
 
             if (productName != "")
             {
-                stringQuery = stringQuery + "AND ProductName Like '%{productName}%' ";
+                sqlQuery = sqlQuery + "AND ProductName Like '%{productName}%' ";
             }
 
-            SqlDataAdapter sqlDataAdapter = new(stringQuery, sqlConnection);
+            SqlDataAdapter sqlDataAdapter = new(sqlQuery, sqlConnection);
             DataTable dataTable = new();
             sqlDataAdapter.Fill(dataTable);
 
@@ -160,17 +161,30 @@ namespace WebApplication1.Controllers
         [HttpPost]
         [Route("ProductAdd")]
         public IActionResult ProductAdd([FromBody] ProductDto product)
-        {   
+        {
             try
             {
-                if (ModelState.IsValid) 
+                if (string.IsNullOrWhiteSpace(product.ProductName))
                 {
-                    string stringQuery = $@"
+                    return BadRequest("ProductName can not be blank");
+                }
+                if (product.ProductName.Length < 3 || product.ProductName.Length > 30)
+                {
+                    return BadRequest("ProductName should be between 3 and 30 characters.");
+                }
+                if (product.Price < 800)
+                {
+                    return BadRequest("product price should be minimum 800 or  more than 800");
+                }
+
+                if (ModelState.IsValid)
+                {
+                    string sqlQuery = $@"
                     INSERT INTO Products(ProductName, BrandName, Price, LaunchDate)
                     VALUES (@ProductName, @BrandName, @Price, @LaunchDate)
                     Select Scope_Identity() ";
 
-                    var sqlCommand = new SqlCommand(stringQuery, sqlConnection);
+                    var sqlCommand = new SqlCommand(sqlQuery, sqlConnection);
                     sqlCommand.Parameters.AddWithValue("@ProductName", product.ProductName);
                     sqlCommand.Parameters.AddWithValue("@BrandName", product.BrandName);
                     sqlCommand.Parameters.AddWithValue("@Price", product.Price);
@@ -197,9 +211,9 @@ namespace WebApplication1.Controllers
         [Route("GetProductNameById/{ProductId}")]
         public IActionResult GetProductNameById(int productId)
         {
-            string insertQuery = "SELECT ProductName FROM Products WHERE Id = @productId";
+            string sqlQuery = "SELECT ProductName FROM Products WHERE Id = @productId";
 
-            var sqlCommand = new SqlCommand(insertQuery, sqlConnection);
+            var sqlCommand = new SqlCommand(sqlQuery, sqlConnection);
             sqlCommand.Parameters.AddWithValue("@productId", productId);
 
             sqlConnection.Open();

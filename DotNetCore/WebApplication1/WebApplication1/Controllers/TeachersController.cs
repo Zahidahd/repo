@@ -47,9 +47,9 @@ namespace WebApplication1.Controllers
         [Route("GetTeachersCount")]
         public IActionResult GetTeachersCount()
         {
-            string stringQuery = "SELECT COUNT(*) FROM Teachers";
+            string sqlQuery = "SELECT COUNT(*) FROM Teachers";
 
-            var sqlCommand = new SqlCommand(stringQuery, sqlConnection);
+            var sqlCommand = new SqlCommand(sqlQuery, sqlConnection);
 
             sqlConnection.Open();
             int customerCount = Convert.ToInt32(sqlCommand.ExecuteScalar());
@@ -99,10 +99,10 @@ namespace WebApplication1.Controllers
         [Route("GetTeacherBySalaryRange/{minimumSalary}/{maximumSalary}")]
         public IActionResult GetTeacherBySalaryRange(int minimumSalary, int maximumSalary)
         {
-            string stringQuery = $@" SELECT * FROM Teachers 
+            string sqlQuery = $@" SELECT * FROM Teachers 
                                     WHERE Salary BETWEEN {minimumSalary} AND {maximumSalary}
                                     ORDER BY Salary ";
-            SqlDataAdapter sqlDataAdapter = new(stringQuery, sqlConnection);
+            SqlDataAdapter sqlDataAdapter = new(sqlQuery, sqlConnection);
             DataTable dataTable = new();
             sqlDataAdapter.Fill(dataTable);
 
@@ -122,14 +122,31 @@ namespace WebApplication1.Controllers
         {
             try
             {
+                if (string.IsNullOrWhiteSpace(teacherDto.FullName))
+                {
+                    return BadRequest("Name can not be blank");
+                }
+                if (teacherDto.FullName.Length < 3 || teacherDto.FullName.Length > 30)
+                {
+                    return BadRequest("Name should be between 3 and 30 characters.");
+                }
+                if (teacherDto.Age <= 25)
+                {
+                    return BadRequest("Invalid age, Teacher age should be above 25");
+                }
+                if (teacherDto.Salary < 25000)
+                {
+                    return BadRequest("Invalid salary, Teacher salary should be above 25000");
+                }
+
                 if (ModelState.IsValid)
                 {
-                    string stringQuery = $@"
+                    string sqlQuery = $@"
                     INSERT INTO Teachers(FullName, Age, Gender, SchoolName, Department, Salary)
                     VALUES (@FullName, @Age, @Gender, @SchoolName, @Department, @Salary)
                     Select Scope_Identity() ";
 
-                    var sqlCommand = new SqlCommand(stringQuery, sqlConnection);
+                    var sqlCommand = new SqlCommand(sqlQuery, sqlConnection);
                     sqlCommand.Parameters.AddWithValue("@FullName", teacherDto.FullName);
                     sqlCommand.Parameters.AddWithValue("@Age", teacherDto.Age);
                     sqlCommand.Parameters.AddWithValue("@Gender", teacherDto.Gender);
@@ -158,9 +175,9 @@ namespace WebApplication1.Controllers
         [Route("GetTeacherFullNameById/{TeacherId}")]
         public IActionResult GetTeacherFullNameById(int teacherId)
         {
-            string stringQuery = "SELECT FullName FROM Teachers WHERE Id = @teacherId";
+            string sqlQuery = "SELECT FullName FROM Teachers WHERE Id = @teacherId";
 
-            var sqlCommand = new SqlCommand(stringQuery, sqlConnection);
+            var sqlCommand = new SqlCommand(sqlQuery, sqlConnection);
             sqlCommand.Parameters.AddWithValue("@teacherId", teacherId);
 
             sqlConnection.Open();

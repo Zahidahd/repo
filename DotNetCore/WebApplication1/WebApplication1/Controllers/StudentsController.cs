@@ -78,12 +78,12 @@ namespace WebApplication1.Controllers
         [Route("GetStudentCollegeNameByEnrollmentId/{enrollmentId}")]
         public IActionResult GetStudentCollegeNameByEnrollmentId(int enrollmentId)
         {
-            string stringQuery = @"SELECT Colleges.CollegeName 
+            string sqlQuery = @"SELECT Colleges.CollegeName 
                                    FROM Students
                                    INNER JOIN Colleges ON Students.CollegeId = Colleges.Id	
                                    WHERE EnrollmentId = @enrollmentId";
 
-            var sqlCommand = new SqlCommand(stringQuery, sqlConnection);
+            var sqlCommand = new SqlCommand(sqlQuery, sqlConnection);
             sqlCommand.Parameters.AddWithValue("@enrollmentId", enrollmentId);
 
             sqlConnection.Open();
@@ -97,12 +97,12 @@ namespace WebApplication1.Controllers
         [Route("GetStudentCourseNameByEnrollmentId/{enrollmentId}")]
         public IActionResult GetStudentCourseNameByEnrollmentId(int enrollmentId)
         {
-            string stringQuery = @"SELECT Courses.CourceName 
+            string sqlQuery = @"SELECT Courses.CourceName 
                                    FROM Students
                                    INNER JOIN Courses ON Students.CourseId = Courses.Id	
                                    WHERE EnrollmentId = @enrollmentId";
 
-            var sqlCommand = new SqlCommand(stringQuery, sqlConnection);
+            var sqlCommand = new SqlCommand(sqlQuery, sqlConnection);
             sqlCommand.Parameters.AddWithValue("@enrollmentId", enrollmentId);
 
             sqlConnection.Open();
