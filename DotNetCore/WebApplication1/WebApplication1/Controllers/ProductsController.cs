@@ -59,6 +59,10 @@ namespace WebApplication1.Controllers
         [Route("GetProductDetail/{productId}")]
         public IActionResult GetProductDetailById(int productId)
         {
+            if (productId < 1)
+            {
+                return NotFound("product Id should be greater than 0");
+            }
             SqlDataAdapter sqlDataAdapter = new("SELECT * FROM Products WHERE Id =" + productId, sqlConnection);
             DataTable dataTable = new();
             sqlDataAdapter.Fill(dataTable);
@@ -77,6 +81,18 @@ namespace WebApplication1.Controllers
         [Route("GetProducts/{brandName}/{priceUpto}")]
         public IActionResult GetProductsDetailByBrandNameByPriceUpto(string brandName, int priceUpto)
         {
+            if (string.IsNullOrWhiteSpace(brandName))
+            {
+                return BadRequest("BrandName can not be blank");
+            }
+            if (brandName.Length < 3 || brandName.Length > 30)
+            {
+                return BadRequest("BrandName should be between 3 and 30 characters.");
+            }
+            if (priceUpto < 600)
+            {
+                return BadRequest("priceUpto should be greater than 600");
+            }
             string sqlQuery = $" SELECT * FROM Products WHERE BrandName = '{brandName}' AND Price <= '{priceUpto}' ";
             SqlDataAdapter sqlDataAdapter = new(sqlQuery, sqlConnection);
             DataTable dataTable = new();
@@ -96,6 +112,11 @@ namespace WebApplication1.Controllers
         [Route("GetProductsByPriceRange/{minimumPrice}/{maximumPrice}")]
         public IActionResult GetProductsByPriceRange(int minimumPrice, int maximumPrice)
         {
+            if (maximumPrice < minimumPrice)
+            {
+                return BadRequest("Maximum price cannot be smaller than minimum price");
+            }
+
             string sqlQuery = $@" SELECT * FROM Products 
                                     WHERE Price BETWEEN {minimumPrice} AND {maximumPrice}
                                     ORDER BY Price ";
@@ -132,7 +153,7 @@ namespace WebApplication1.Controllers
             }
         }
 
-        // This code is not working please help
+        // This code is not running please help
         [HttpGet]
         [Route("GetProductsDetail/{brandName}/{productName}")]
         public IActionResult GetProductsDetailByProductNameBrandName(string brandName, string productName)
@@ -157,7 +178,7 @@ namespace WebApplication1.Controllers
                 return NotFound();
             }
         }
-        //Changes done
+
         [HttpPost]
         [Route("ProductAdd")]
         public IActionResult ProductAdd([FromBody] ProductDto product)
@@ -211,6 +232,10 @@ namespace WebApplication1.Controllers
         [Route("GetProductNameById/{ProductId}")]
         public IActionResult GetProductNameById(int productId)
         {
+            if (productId < 1)
+            {
+                return NotFound("product Id should be greater than 0");
+            }
             string sqlQuery = "SELECT ProductName FROM Products WHERE Id = @productId";
 
             var sqlCommand = new SqlCommand(sqlQuery, sqlConnection);
