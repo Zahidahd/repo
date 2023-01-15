@@ -61,9 +61,12 @@ namespace WebApplication1.Controllers
         {
             if (productId < 1)
             {
-                return NotFound("product Id should be greater than 0");
+                return NotFound("ProductId should be greater than 0");
             }
-            SqlDataAdapter sqlDataAdapter = new("SELECT * FROM Products WHERE Id =" + productId, sqlConnection);
+            SqlDataAdapter sqlDataAdapter = new("SELECT * FROM Products WHERE Id = @productId", sqlConnection);
+
+            sqlDataAdapter.SelectCommand.Parameters.AddWithValue("@productId", productId);
+
             DataTable dataTable = new();
             sqlDataAdapter.Fill(dataTable);
 
@@ -93,8 +96,12 @@ namespace WebApplication1.Controllers
             {
                 return BadRequest("priceUpto should be greater than 600");
             }
-            string sqlQuery = $" SELECT * FROM Products WHERE BrandName = '{brandName}' AND Price <= '{priceUpto}' ";
-            SqlDataAdapter sqlDataAdapter = new(sqlQuery, sqlConnection);
+            SqlDataAdapter sqlDataAdapter = new($@"SELECT * FROM Products WHERE BrandName = @brandName AND
+                                                    Price <= @priceUpto", sqlConnection);
+
+            sqlDataAdapter.SelectCommand.Parameters.AddWithValue("@brandName", brandName);
+            sqlDataAdapter.SelectCommand.Parameters.AddWithValue("@priceUpto", priceUpto);
+
             DataTable dataTable = new();
             sqlDataAdapter.Fill(dataTable);
 
@@ -117,10 +124,13 @@ namespace WebApplication1.Controllers
                 return BadRequest("Maximum price cannot be smaller than minimum price");
             }
 
-            string sqlQuery = $@" SELECT * FROM Products 
-                                    WHERE Price BETWEEN {minimumPrice} AND {maximumPrice}
-                                    ORDER BY Price ";
-            SqlDataAdapter sqlDataAdapter = new(sqlQuery, sqlConnection);
+            SqlDataAdapter sqlDataAdapter = new($@" SELECT * FROM Products 
+                                                    WHERE Price BETWEEN @minimumPrice AND @maximumPrice
+                                                    ORDER BY Price", sqlConnection);
+
+            sqlDataAdapter.SelectCommand.Parameters.AddWithValue("@minimumPrice", minimumPrice);
+            sqlDataAdapter.SelectCommand.Parameters.AddWithValue("@maximumPrice", maximumPrice);
+
             DataTable dataTable = new();
             sqlDataAdapter.Fill(dataTable);
 
@@ -138,8 +148,14 @@ namespace WebApplication1.Controllers
         [Route("GetDeliverableProductsByPincode/{pincode}")]
         public IActionResult GetDeliverableProductsByPincode(int pincode)
         {
-            string sqlQuery = $" SELECT * FROM Products WHERE Pincode = '{pincode}'";
-            SqlDataAdapter sqlDataAdapter = new(sqlQuery, sqlConnection);
+            if (pincode.ToString().Length > 6 || pincode.ToString().Length < 6)
+            {
+                return BadRequest("Pincode code should be of six digits only");
+            }
+            SqlDataAdapter sqlDataAdapter = new("SELECT * FROM Products WHERE Pincode = @pincode", sqlConnection);
+
+            sqlDataAdapter.SelectCommand.Parameters.AddWithValue("@pincode", pincode);
+
             DataTable dataTable = new();
             sqlDataAdapter.Fill(dataTable);
 
@@ -153,19 +169,30 @@ namespace WebApplication1.Controllers
             }
         }
 
-        // This code is not running please help
         [HttpGet]
-        [Route("GetProductsDetail/{brandName}/{productName}")]
-        public IActionResult GetProductsDetailByProductNameBrandName(string brandName, string productName)
+        [Route("GetProductsDetailByBrandNameByProductName/{brandName}/{productName?}")]
+        public IActionResult GetProductsDetailByBrandNameByProductName(string brandName, string? productName)
         {
-            string sqlQuery = $"SELECT * FROM Products WHERE BrandName Like '%{brandName}%' ";
-
-            if (productName != "")
+            if (string.IsNullOrWhiteSpace(productName))
             {
-                sqlQuery = sqlQuery + "AND ProductName Like '%{productName}%' ";
+                return BadRequest("ProductName can not be blank");
+            }
+            if (productName.Length < 3 || productName.Length > 30)
+            {
+                return BadRequest("ProductName should be between 3 and 30 characters.");
+            }
+
+            string sqlQuery = "SELECT * FROM Products WHERE BrandName = @brandName ";
+
+            if (!string.IsNullOrWhiteSpace(productName))
+            {
+                sqlQuery += "AND ProductName = @productName ";
             }
 
             SqlDataAdapter sqlDataAdapter = new(sqlQuery, sqlConnection);
+            sqlDataAdapter.SelectCommand.Parameters.AddWithValue("@brandName", brandName);
+            sqlDataAdapter.SelectCommand.Parameters.AddWithValue("@productName", productName);
+
             DataTable dataTable = new();
             sqlDataAdapter.Fill(dataTable);
 

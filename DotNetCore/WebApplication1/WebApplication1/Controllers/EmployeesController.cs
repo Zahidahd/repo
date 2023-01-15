@@ -5,6 +5,7 @@ using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
 using System.Collections.Specialized;
 using System.Data;
+using System.Reflection;
 using WebApplication1.DTO.InputDTO;
 
 namespace WebApplication1.Controllers
@@ -59,7 +60,14 @@ namespace WebApplication1.Controllers
         [Route("GetEmployeeDetailById/{employeeId}")]
         public IActionResult GetEmployeeDetailById(int employeeId)
         {
-            SqlDataAdapter sqlDataAdapter = new("SELECT * FROM Employees WHERE Id =" + employeeId, sqlConnection);
+            if (employeeId < 1)
+            {
+                return BadRequest("EmployeeId should be greater than 0");
+            }
+            SqlDataAdapter sqlDataAdapter = new("SELECT * FROM Employees WHERE Id = @employeeId", sqlConnection);
+
+            sqlDataAdapter.SelectCommand.Parameters.AddWithValue("@employeeId", employeeId);
+
             DataTable dataTable = new();
             sqlDataAdapter.Fill(dataTable);
 
@@ -77,8 +85,17 @@ namespace WebApplication1.Controllers
         [Route("GetEmployeeDetail/{gender}/{salary}")]
         public IActionResult GetEmployeeDetailByGenderBySalary(string gender, int salary)
         {
-            string sqlQuery = $"SELECT * FROM Employees WHERE Gender = '{gender}' AND Salary > '{salary}' ";
-            SqlDataAdapter sqlDataAdapter = new(sqlQuery, sqlConnection);
+            if (salary < 8000)
+            {
+                return BadRequest("Please Enter salary above 8000");
+            }
+            SqlDataAdapter sqlDataAdapter;
+            sqlDataAdapter = new SqlDataAdapter($@"SELECT * FROM Employees WHERE Gender = @gender 
+                                                   AND Salary > @salary", sqlConnection);
+
+            sqlDataAdapter.SelectCommand.Parameters.AddWithValue("@gender", gender);
+            sqlDataAdapter.SelectCommand.Parameters.AddWithValue("@salary", salary);
+
             DataTable dataTable = new();
             sqlDataAdapter.Fill(dataTable);
 
@@ -96,11 +113,23 @@ namespace WebApplication1.Controllers
         [Route("GetEmployeeBySalaryRange/{minimumSalary}/{maximumSalary}")]
         public IActionResult GetEmployeeBySalaryRange(int minimumSalary, int maximumSalary)
         {
-            string sqlQuery = $@" SELECT * FROM Employees 
-                                    WHERE Salary BETWEEN {minimumSalary} AND {maximumSalary}
-                                    ORDER BY Salary ";
-            SqlDataAdapter sqlDataAdapter = new(sqlQuery, sqlConnection);
-            DataTable dataTable = new();
+            if (minimumSalary < 8000)
+            {
+                return BadRequest("Please Enter minimumSalary salary above 8000");
+            }
+            if (maximumSalary > 500000)
+            {
+                return BadRequest("Please Enter maximumSalary salary less than 500000");
+            }
+            SqlDataAdapter sqlDataAdapter;
+            sqlDataAdapter = new SqlDataAdapter($@" SELECT * FROM Employees 
+                                                    WHERE Salary BETWEEN @minimumSalary AND @maximumSalary
+                                                    ORDER BY Salary", sqlConnection);
+
+            sqlDataAdapter.SelectCommand.Parameters.AddWithValue("@minimumSalary", minimumSalary);
+            sqlDataAdapter.SelectCommand.Parameters.AddWithValue("@maximumSalary", maximumSalary);
+
+            var dataTable = new DataTable();
             sqlDataAdapter.Fill(dataTable);
 
             if (dataTable.Rows.Count > 0)
@@ -112,7 +141,7 @@ namespace WebApplication1.Controllers
                 return NotFound();
             }
         }
-        //Changes done
+
         [HttpPost]
         [Route("EmployeeRegister")]
         public IActionResult EmployeeRegister([FromBody] EmployeeDto employee)
@@ -131,19 +160,18 @@ namespace WebApplication1.Controllers
                 {
                     return BadRequest("Name should be between 3 and 30 characters.");
                 }
-                if (employee.Salary < 15000)
+                if (employee.Salary < 8000)
                 {
-                    return BadRequest("Invalid salary, Employee salary should be above 15000");
+                    return BadRequest("Invalid salary, Employee salary should be above 8000");
                 }
 
                 if (ModelState.IsValid)
 
                     if (ModelState.IsValid)
                     {
-                        string sqlQuery = $@"
-                    INSERT INTO Employees(FullName, Email, Gender, DateOfJoining, Salary)
-                    VALUES (@FullName, @Email, @Gender, @DateOfJoining, @Salary)
-                    Select Scope_Identity() ";
+                        string sqlQuery = $@"INSERT INTO Employees(FullName, Email, Gender, DateOfJoining, Salary)
+                                             VALUES (@FullName, @Email, @Gender, @DateOfJoining, @Salary)
+                                             Select Scope_Identity() ";
 
                         var sqlCommand = new SqlCommand(sqlQuery, sqlConnection);
                         sqlCommand.Parameters.AddWithValue("@FullName", employee.FullName);
@@ -174,10 +202,10 @@ namespace WebApplication1.Controllers
         [Route("GetEmployeeFullNameById/{EmployeeId}")]
         public IActionResult GetEmployeeFullNameById(int employeeId)
         {
-            string sqlQuery = "SELECT FullName FROM Employees WHERE Id = @productId";
+            string sqlQuery = "SELECT FullName FROM Employees WHERE Id = @employeeId";
 
             var sqlCommand = new SqlCommand(sqlQuery, sqlConnection);
-            sqlCommand.Parameters.AddWithValue("@productId", employeeId);
+            sqlCommand.Parameters.AddWithValue("@employeeId", employeeId);
 
             sqlConnection.Open();
             string employeeFullName = Convert.ToString(sqlCommand.ExecuteScalar());

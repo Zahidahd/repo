@@ -66,9 +66,12 @@ namespace WebApplication1.Controllers
         {
             if (customerId < 1)
             {
-                return NotFound("CustomerId should be greater than 0");
+                return BadRequest("CustomerId should be greater than 0");
             }
-            SqlDataAdapter sqlDataAdapter = new("SELECT * FROM Customers WHERE Id =" + customerId, sqlConnection);
+            SqlDataAdapter sqlDataAdapter = new("SELECT * FROM Customers WHERE Id = @customerId", sqlConnection);
+
+            sqlDataAdapter.SelectCommand.Parameters.AddWithValue("@customerId", customerId);
+
             DataTable dataTable = new();
             sqlDataAdapter.Fill(dataTable);
 
@@ -95,8 +98,13 @@ namespace WebApplication1.Controllers
                 return BadRequest("country should not be more than 10 characters");
             }
 
-            string sqlQuery = $"SELECT * FROM Customers WHERE Gender ='{gender}' AND Country = '{country}' ";
-            SqlDataAdapter sqlDataAdapter = new(sqlQuery, sqlConnection);
+            SqlDataAdapter sqlDataAdapter = new(@"SELECT * FROM Customers WHERE Gender = @gender
+                                                  AND Country = @country ", sqlConnection);
+
+            sqlDataAdapter.SelectCommand.Parameters.AddWithValue("@gender", gender);
+            sqlDataAdapter.SelectCommand.Parameters.AddWithValue("@country", country);
+
+
             DataTable dataTable = new();
             sqlDataAdapter.Fill(dataTable);
 
@@ -109,7 +117,7 @@ namespace WebApplication1.Controllers
                 return NotFound();
             }
         }
-        //Changes done
+        
         [HttpPost]
         [Route("CustomerRegister")]
         public IActionResult CustomerRegister([FromBody] CustomerDto customer)
@@ -139,10 +147,9 @@ namespace WebApplication1.Controllers
 
                 if (ModelState.IsValid)
                 {
-                    string sqlQuery = $@"
-                    INSERT INTO Customers(Name, Gender, Age, Country)
-                    VALUES (@FullName, @Gender, @Age, @Country)
-                    Select Scope_Identity() ";
+                    string sqlQuery = @"INSERT INTO Customers(Name, Gender, Age, Country)
+                                        VALUES (@FullName, @Gender, @Age, @Country)
+                                        Select Scope_Identity() ";
 
                     var sqlCommand = new SqlCommand(sqlQuery, sqlConnection);
                     sqlCommand.Parameters.AddWithValue("@FullName", customer.FullName);
