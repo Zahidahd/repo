@@ -28,7 +28,7 @@ namespace WebApplication1.Controllers
         public IActionResult GetAllEmployees()
         {
             SqlDataAdapter sqlDataAdapter = new("SELECT * FROM Employees", sqlConnection);
-            DataTable dataTable = new DataTable();
+            DataTable dataTable = new();
             sqlDataAdapter.Fill(dataTable);
 
             if (dataTable.Rows.Count > 0)

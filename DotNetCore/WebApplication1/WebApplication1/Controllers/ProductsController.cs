@@ -27,7 +27,7 @@ namespace WebApplication1.Controllers
         public IActionResult GetAllProducts()
         {
             SqlDataAdapter sqlDataAdapter = new("SELECT * FROM Products", sqlConnection);
-            DataTable dataTable = new DataTable();
+            DataTable dataTable = new();
             sqlDataAdapter.Fill(dataTable);
 
             if (dataTable.Rows.Count > 0)

@@ -37,7 +37,7 @@ namespace WebApplication1.Controllers
                                                 FROM Students 
                                                 INNER JOIN Courses ON Students.CourseId = Courses.Id INNER JOIN
                                                 Colleges ON Students.CollegeId = Colleges.Id", sqlConnection);
-            DataTable dataTable = new DataTable();
+            DataTable dataTable = new();
             sqlDataAdapter.Fill(dataTable);
 
             if (dataTable.Rows.Count > 0)
@@ -54,13 +54,20 @@ namespace WebApplication1.Controllers
         [Route("GetStudentDetailByEnrollmentId/{enrollmentId}")]
         public IActionResult GetStudentDetailByEnrollmentId(int enrollmentId)
         {
+            if (enrollmentId < 1)
+            {
+                return BadRequest("EnrollmentId cannot be less than 1");
+            }
             SqlDataAdapter sqlDataAdapter = new(@"SELECT Students.Name, Students.EnrollmentId, 
                                                 Students.RollNumber, Colleges.CollegeName, 
                                                 Courses.CourceName 
                                                 FROM Students 
                                                 INNER JOIN Courses ON Students.CourseId = Courses.Id INNER JOIN
                                                 Colleges ON Students.CollegeId = Colleges.Id
-                                                WHERE EnrollmentId = " + enrollmentId, sqlConnection);
+                                                WHERE EnrollmentId = @enrollmentId", sqlConnection);
+
+            sqlDataAdapter.SelectCommand.Parameters.AddWithValue("@enrollmentId", enrollmentId);
+
             DataTable dataTable = new();
             sqlDataAdapter.Fill(dataTable);
 
@@ -78,6 +85,10 @@ namespace WebApplication1.Controllers
         [Route("GetStudentCollegeNameByEnrollmentId/{enrollmentId}")]
         public IActionResult GetStudentCollegeNameByEnrollmentId(int enrollmentId)
         {
+            if (enrollmentId < 1)
+            {
+                return BadRequest("EnrollmentId cannot be less than 1");
+            }
             string sqlQuery = @"SELECT Colleges.CollegeName 
                                    FROM Students
                                    INNER JOIN Colleges ON Students.CollegeId = Colleges.Id	
@@ -97,6 +108,10 @@ namespace WebApplication1.Controllers
         [Route("GetStudentCourseNameByEnrollmentId/{enrollmentId}")]
         public IActionResult GetStudentCourseNameByEnrollmentId(int enrollmentId)
         {
+            if (enrollmentId < 1)
+            {
+                return BadRequest("EnrollmentId cannot be less than 1");
+            }
             string sqlQuery = @"SELECT Courses.CourceName 
                                    FROM Students
                                    INNER JOIN Courses ON Students.CourseId = Courses.Id	
@@ -116,9 +131,16 @@ namespace WebApplication1.Controllers
         [Route("GetStudentsNameListByCourseId/{courseId}")]
         public IActionResult GetStudentsNameListByCourseId(int courseId)
         {
+            if (courseId < 1)
+            {
+                return BadRequest("CourseId should be greater than 0");
+            }
             SqlDataAdapter sqlDataAdapter = new(@"SELECT Students.Name FROM Students
                                                   INNER JOIN Courses ON Students.CourseId = Courses.Id
-                                                  WHERE CourseId =" + @courseId, sqlConnection);
+                                                  WHERE CourseId = @courseId ", sqlConnection);
+
+            sqlDataAdapter.SelectCommand.Parameters.AddWithValue("@courseId", courseId);
+
             DataTable dataTable = new();
             sqlDataAdapter.Fill(dataTable);
 

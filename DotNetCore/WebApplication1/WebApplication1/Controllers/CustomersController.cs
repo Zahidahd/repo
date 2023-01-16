@@ -31,7 +31,7 @@ namespace WebApplication1.Controllers
         public IActionResult GetAllProducts()
         {
             SqlDataAdapter sqlDataAdapter = new("SELECT * FROM Customers", sqlConnection);
-            DataTable dataTable = new DataTable();
+            DataTable dataTable = new();
             sqlDataAdapter.Fill(dataTable);
 
             if (dataTable.Rows.Count > 0)
@@ -117,7 +117,7 @@ namespace WebApplication1.Controllers
                 return NotFound();
             }
         }
-        
+
         [HttpPost]
         [Route("CustomerRegister")]
         public IActionResult CustomerRegister([FromBody] CustomerDto customer)

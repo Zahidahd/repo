@@ -32,7 +32,7 @@ namespace WebApplication1.Controllers
         public IActionResult GetTeachers()
         {
             SqlDataAdapter sqlDataAdapter = new("SELECT * FROM Teachers", sqlConnection);
-            DataTable dataTable = new DataTable();
+            DataTable dataTable = new();
             sqlDataAdapter.Fill(dataTable);
 
             if (dataTable.Rows.Count > 0)
