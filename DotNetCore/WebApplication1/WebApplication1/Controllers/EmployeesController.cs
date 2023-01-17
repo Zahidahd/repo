@@ -6,6 +6,7 @@ using Newtonsoft.Json;
 using System.Collections.Specialized;
 using System.Data;
 using System.Reflection;
+using System.Text.RegularExpressions;
 using WebApplication1.DTO.InputDTO;
 
 namespace WebApplication1.Controllers
@@ -113,6 +114,10 @@ namespace WebApplication1.Controllers
         [Route("GetEmployeeBySalaryRange/{minimumSalary}/{maximumSalary}")]
         public IActionResult GetEmployeeBySalaryRange(int minimumSalary, int maximumSalary)
         {
+            if(maximumSalary < minimumSalary)
+            {
+                return BadRequest("maximumSalary cannot be less than minimumSalary");
+            }
             if (minimumSalary < 8000)
             {
                 return BadRequest("Please Enter minimumSalary salary above 8000");
@@ -148,10 +153,13 @@ namespace WebApplication1.Controllers
         {
             try
             {
-                //if (!employee.Email.Contains(@" ^([\w\.\-]+)@([\w\-]+)((\.(\w){2,3})+)$"))
-                //{
-                //    return BadRequest("Email is invalid");
-                //}
+                Regex regex = new Regex(@"^([\w\.\-]+)@([\w\-]+)((\.(\w){2,3})+)$");
+                Match match = regex.Match(employee.Email);
+                
+                if (!match.Success)
+                {
+                    return BadRequest("Email is invalid");
+                }
                 if (string.IsNullOrWhiteSpace(employee.FullName))
                 {
                     return BadRequest("Name can not be blank");
@@ -183,7 +191,6 @@ namespace WebApplication1.Controllers
                         sqlConnection.Open();
                         employee.Id = Convert.ToInt32(sqlCommand.ExecuteScalar());
                         sqlConnection.Close();
-
 
                         return Ok(employee.Id);
                     }
