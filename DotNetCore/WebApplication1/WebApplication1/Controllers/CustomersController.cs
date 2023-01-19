@@ -48,10 +48,9 @@ namespace WebApplication1.Controllers
         [Route("GetCustomersCount")]
         public IActionResult GetCustomersCount()
         {
-
             string sqlQuery = "SELECT COUNT(*) FROM Customers ";
 
-            var sqlCommand = new SqlCommand(sqlQuery, sqlConnection);
+            SqlCommand sqlCommand = new(sqlQuery, sqlConnection);
 
             sqlConnection.Open();
             int customerCount = Convert.ToInt32(sqlCommand.ExecuteScalar());
@@ -128,6 +127,11 @@ namespace WebApplication1.Controllers
                 {
                     return BadRequest("FullName can not be blank");
                 }
+
+                customer.FullName = customer.FullName.Trim();
+                customer.Gender = customer.Gender.Trim();
+                customer.Country = customer.Country.Trim();
+
                 if (customer.FullName.Length < 3 || customer.FullName.Length > 30)
                 {
                     return BadRequest("FullName should be between 3 and 30 characters.");
@@ -151,7 +155,7 @@ namespace WebApplication1.Controllers
                                         VALUES (@FullName, @Gender, @Age, @Country)
                                         Select Scope_Identity() ";
 
-                    var sqlCommand = new SqlCommand(sqlQuery, sqlConnection);
+                    SqlCommand sqlCommand = new(sqlQuery, sqlConnection);
                     sqlCommand.Parameters.AddWithValue("@FullName", customer.FullName);
                     sqlCommand.Parameters.AddWithValue("@Gender", customer.Gender);
                     sqlCommand.Parameters.AddWithValue("@Age", customer.Age);
@@ -180,11 +184,11 @@ namespace WebApplication1.Controllers
         {
             if (customerId < 1)
             {
-                return NotFound("CustomerId Id should be greater than 0");
+                return BadRequest("CustomerId Id should be greater than 0");
             }
-            string sqlQuery = @"SELECT Name FROM Customers where id = @customerId";
+            string sqlQuery = "SELECT Name FROM Customers where id = @customerId";
 
-            var sqlCommand = new SqlCommand(sqlQuery, sqlConnection);
+            SqlCommand sqlCommand = new(sqlQuery, sqlConnection);
             sqlCommand.Parameters.AddWithValue("@customerId", customerId);
 
             sqlConnection.Open();

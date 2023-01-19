@@ -19,7 +19,7 @@ namespace WebApplication1.Controllers
         public ProductsController(IConfiguration configuration)
         {
             _Configuration = configuration;
-            sqlConnection = new SqlConnection(_Configuration.GetConnectionString("ECommerceDBConnection").ToString());
+            sqlConnection = new(_Configuration.GetConnectionString("ECommerceDBConnection").ToString());
         }
 
         [HttpGet]
@@ -46,7 +46,7 @@ namespace WebApplication1.Controllers
         {
             string sqlQuery = "SELECT COUNT(*) FROM Products ";
 
-            var sqlCommand = new SqlCommand(sqlQuery, sqlConnection);
+            SqlCommand sqlCommand = new(sqlQuery, sqlConnection);
 
             sqlConnection.Open();
             int productCount = Convert.ToInt32(sqlCommand.ExecuteScalar());
@@ -61,7 +61,7 @@ namespace WebApplication1.Controllers
         {
             if (productId < 1)
             {
-                return NotFound("ProductId should be greater than 0");
+                return BadRequest("ProductId should be greater than 0");
             }
             SqlDataAdapter sqlDataAdapter = new("SELECT * FROM Products WHERE Id = @productId", sqlConnection);
 
@@ -88,6 +88,7 @@ namespace WebApplication1.Controllers
             {
                 return BadRequest("BrandName can not be blank");
             }
+            brandName = brandName.Trim();
             if (brandName.Length < 3 || brandName.Length > 30)
             {
                 return BadRequest("BrandName should be between 3 and 30 characters.");
@@ -96,7 +97,7 @@ namespace WebApplication1.Controllers
             {
                 return BadRequest("priceUpto should be greater than 600");
             }
-            SqlDataAdapter sqlDataAdapter = new($@"SELECT * FROM Products WHERE BrandName = @brandName AND
+            SqlDataAdapter sqlDataAdapter = new(@"SELECT * FROM Products WHERE BrandName = @brandName AND
                                                     Price <= @priceUpto", sqlConnection);
 
             sqlDataAdapter.SelectCommand.Parameters.AddWithValue("@brandName", brandName);
@@ -124,7 +125,7 @@ namespace WebApplication1.Controllers
                 return BadRequest("Maximum price cannot be smaller than minimum price");
             }
 
-            SqlDataAdapter sqlDataAdapter = new($@" SELECT * FROM Products 
+            SqlDataAdapter sqlDataAdapter = new(@" SELECT * FROM Products 
                                                     WHERE Price BETWEEN @minimumPrice AND @maximumPrice
                                                     ORDER BY Price", sqlConnection);
 
@@ -216,6 +217,7 @@ namespace WebApplication1.Controllers
                 {
                     return BadRequest("ProductName can not be blank");
                 }
+                product.ProductName = product.ProductName.Trim();
                 if (product.ProductName.Length < 3 || product.ProductName.Length > 30)
                 {
                     return BadRequest("ProductName should be between 3 and 30 characters.");
@@ -227,12 +229,12 @@ namespace WebApplication1.Controllers
 
                 if (ModelState.IsValid)
                 {
-                    string sqlQuery = $@"
-                    INSERT INTO Products(ProductName, BrandName, Price, LaunchDate)
-                    VALUES (@ProductName, @BrandName, @Price, @LaunchDate)
-                    Select Scope_Identity() ";
+                    string sqlQuery = @"INSERT INTO Products(ProductName, BrandName, Price, LaunchDate)
+                                        VALUES (@ProductName, @BrandName, @Price, @LaunchDate)
+                                        Select Scope_Identity() ";
 
-                    var sqlCommand = new SqlCommand(sqlQuery, sqlConnection);
+                    SqlCommand sqlCommand = new(sqlQuery, sqlConnection);
+
                     sqlCommand.Parameters.AddWithValue("@ProductName", product.ProductName);
                     sqlCommand.Parameters.AddWithValue("@BrandName", product.BrandName);
                     sqlCommand.Parameters.AddWithValue("@Price", product.Price);
@@ -261,11 +263,11 @@ namespace WebApplication1.Controllers
         {
             if (productId < 1)
             {
-                return NotFound("product Id should be greater than 0");
+                return BadRequest("product Id should be greater than 0");
             }
             string sqlQuery = "SELECT ProductName FROM Products WHERE Id = @productId";
 
-            var sqlCommand = new SqlCommand(sqlQuery, sqlConnection);
+            SqlCommand sqlCommand = new(sqlQuery, sqlConnection);
             sqlCommand.Parameters.AddWithValue("@productId", productId);
 
             sqlConnection.Open();

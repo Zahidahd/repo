@@ -19,7 +19,7 @@ namespace WebApplication1.Controllers
         public OrdersController(IConfiguration configuration)
         {
             _Configuration = configuration;
-            sqlConnection = new SqlConnection(_Configuration.GetConnectionString("ECommerceDBConnection").ToString());
+            sqlConnection = new(_Configuration.GetConnectionString("ECommerceDBConnection").ToString());
         }
 
         [HttpGet]
@@ -44,15 +44,15 @@ namespace WebApplication1.Controllers
         [Route("GetOrdersCount")]
         public IActionResult GetOrdersCount()
         {
-            string stringQuery = @"SELECT COUNT(*) FROM Customers ";
+            string stringQuery = "SELECT COUNT(*) FROM Customers ";
 
-            var sqlCommand = new SqlCommand(stringQuery, sqlConnection);
+            SqlCommand sqlCommand = new(stringQuery, sqlConnection);
 
             sqlConnection.Open();
-            int customerCount = Convert.ToInt32(sqlCommand.ExecuteScalar());
+            int orderCount = Convert.ToInt32(sqlCommand.ExecuteScalar());
             sqlConnection.Close();
 
-            return Ok(customerCount);
+            return Ok(orderCount);
         }
 
         [HttpGet]
@@ -121,6 +121,7 @@ namespace WebApplication1.Controllers
                 {
                     return BadRequest("ProductName can not be blank");
                 }
+                order.ProductName = order.ProductName.Trim();
                 if (order.ProductName.Length < 3 || order.ProductName.Length > 30)
                 {
                     return BadRequest("ProductName should be between 3 and 30 characters.");
@@ -140,11 +141,12 @@ namespace WebApplication1.Controllers
 
                     if (ModelState.IsValid)
                     {
-                        string sqlQuery = $@"INSERT INTO Orders(CustomerId, OrderDate, Amount, ProductName)
+                        string sqlQuery = @" INSERT INTO Orders(CustomerId, OrderDate, Amount, ProductName)
                                              VALUES (@CustomerId, @OrderDate, @Amount, @ProductName)
                                              Select Scope_Identity() ";
 
-                        var sqlCommand = new SqlCommand(sqlQuery, sqlConnection);
+                        SqlCommand sqlCommand = new(sqlQuery, sqlConnection);
+
                         sqlCommand.Parameters.AddWithValue("@CustomerId", order.CustomerId);
                         sqlCommand.Parameters.AddWithValue("@OrderDate", order.OrderDate);
                         sqlCommand.Parameters.AddWithValue("@Amount", order.Amount);

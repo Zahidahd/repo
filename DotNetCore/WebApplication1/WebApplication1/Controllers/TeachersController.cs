@@ -24,7 +24,7 @@ namespace WebApplication1.Controllers
         public TeachersController(IConfiguration configuration)
         {
             _Configuration = configuration;
-            sqlConnection = new SqlConnection(_Configuration.GetConnectionString("PracticeDBConnection").ToString());
+            sqlConnection = new(_Configuration.GetConnectionString("PracticeDBConnection").ToString());
         }
 
         [HttpGet]
@@ -51,7 +51,7 @@ namespace WebApplication1.Controllers
         {
             string sqlQuery = "SELECT COUNT(*) FROM Teachers";
 
-            var sqlCommand = new SqlCommand(sqlQuery, sqlConnection);
+            SqlCommand sqlCommand = new(sqlQuery, sqlConnection);
 
             sqlConnection.Open();
             int customerCount = Convert.ToInt32(sqlCommand.ExecuteScalar());
@@ -66,7 +66,7 @@ namespace WebApplication1.Controllers
         {
             if (teacherId < 1)
             {
-                return NotFound("TeacherId Id should be greater than 0");
+                return BadRequest("TeacherId Id should be greater than 0");
             }
             SqlDataAdapter sqlDataAdapter = new("SELECT * FROM Teachers WHERE Id = @teacherId", sqlConnection);
 
@@ -133,7 +133,7 @@ namespace WebApplication1.Controllers
             {
                 return BadRequest("Maximum salary cannot be smaller than minimum salary");
             }
-            SqlDataAdapter sqlDataAdapter = new($@" SELECT * FROM Teachers 
+            SqlDataAdapter sqlDataAdapter = new(@" SELECT * FROM Teachers 
                                                     WHERE Salary BETWEEN @minimumSalary AND @maximumSalary
                                                     ORDER BY Salary", sqlConnection);
 
@@ -163,6 +163,7 @@ namespace WebApplication1.Controllers
                 {
                     return BadRequest("Name can not be blank");
                 }
+                teacherDto.FullName = teacherDto.FullName.Trim();
                 if (teacherDto.FullName.Length < 3 || teacherDto.FullName.Length > 30)
                 {
                     return BadRequest("Name should be between 3 and 30 characters.");
@@ -183,7 +184,8 @@ namespace WebApplication1.Controllers
                     VALUES (@FullName, @Age, @Gender, @SchoolName, @Department, @Salary)
                     Select Scope_Identity() ";
 
-                    var sqlCommand = new SqlCommand(sqlQuery, sqlConnection);
+                    SqlCommand sqlCommand = new(sqlQuery, sqlConnection);
+
                     sqlCommand.Parameters.AddWithValue("@FullName", teacherDto.FullName);
                     sqlCommand.Parameters.AddWithValue("@Age", teacherDto.Age);
                     sqlCommand.Parameters.AddWithValue("@Gender", teacherDto.Gender);
@@ -214,12 +216,12 @@ namespace WebApplication1.Controllers
         {
             if (teacherId < 1)
             {
-                return NotFound("TeacherId should be greater than 0");
+                return BadRequest("TeacherId should be greater than 0");
             }
 
             string sqlQuery = "SELECT FullName FROM Teachers WHERE Id = @teacherId";
 
-            var sqlCommand = new SqlCommand(sqlQuery, sqlConnection);
+            SqlCommand sqlCommand = new(sqlQuery, sqlConnection);
             sqlCommand.Parameters.AddWithValue("@teacherId", teacherId);
 
             sqlConnection.Open();

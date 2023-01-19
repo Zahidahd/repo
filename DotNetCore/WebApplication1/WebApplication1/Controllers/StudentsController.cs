@@ -31,12 +31,12 @@ namespace WebApplication1.Controllers
         [Route("GetAllStudents")]
         public IActionResult GetAllStudents()
         {
-            SqlDataAdapter sqlDataAdapter = new(@"SELECT Students.Name, Students.EnrollmentId, 
-                                                Students.RollNumber, Colleges.CollegeName, 
-                                                Courses.CourceName 
-                                                FROM Students 
-                                                INNER JOIN Courses ON Students.CourseId = Courses.Id INNER JOIN
-                                                Colleges ON Students.CollegeId = Colleges.Id", sqlConnection);
+            SqlDataAdapter sqlDataAdapter = new(@" SELECT Students.Name, Students.EnrollmentId, 
+                                                   Students.RollNumber, Colleges.CollegeName, 
+                                                   Courses.CourceName 
+                                                   FROM Students 
+                                                   INNER JOIN Courses ON Students.CourseId = Courses.Id INNER JOIN
+                                                   Colleges ON Students.CollegeId = Colleges.Id", sqlConnection);
             DataTable dataTable = new();
             sqlDataAdapter.Fill(dataTable);
 
@@ -58,13 +58,13 @@ namespace WebApplication1.Controllers
             {
                 return BadRequest("EnrollmentId cannot be less than 1");
             }
-            SqlDataAdapter sqlDataAdapter = new(@"SELECT Students.Name, Students.EnrollmentId, 
-                                                Students.RollNumber, Colleges.CollegeName, 
-                                                Courses.CourceName 
-                                                FROM Students 
-                                                INNER JOIN Courses ON Students.CourseId = Courses.Id INNER JOIN
-                                                Colleges ON Students.CollegeId = Colleges.Id
-                                                WHERE EnrollmentId = @enrollmentId", sqlConnection);
+            SqlDataAdapter sqlDataAdapter = new(@" SELECT Students.Name, Students.EnrollmentId, 
+                                                   Students.RollNumber, Colleges.CollegeName, 
+                                                   Courses.CourceName 
+                                                   FROM Students 
+                                                   INNER JOIN Courses ON Students.CourseId = Courses.Id INNER JOIN
+                                                   Colleges ON Students.CollegeId = Colleges.Id
+                                                   WHERE EnrollmentId = @enrollmentId", sqlConnection);
 
             sqlDataAdapter.SelectCommand.Parameters.AddWithValue("@enrollmentId", enrollmentId);
 
@@ -89,12 +89,13 @@ namespace WebApplication1.Controllers
             {
                 return BadRequest("EnrollmentId cannot be less than 1");
             }
-            string sqlQuery = @"SELECT Colleges.CollegeName 
-                                   FROM Students
-                                   INNER JOIN Colleges ON Students.CollegeId = Colleges.Id	
-                                   WHERE EnrollmentId = @enrollmentId";
+            string sqlQuery = @" SELECT Colleges.CollegeName 
+                                 FROM Students
+                                 INNER JOIN Colleges ON Students.CollegeId = Colleges.Id	
+                                 WHERE EnrollmentId = @enrollmentId";
 
-            var sqlCommand = new SqlCommand(sqlQuery, sqlConnection);
+            SqlCommand sqlCommand = new(sqlQuery, sqlConnection);
+
             sqlCommand.Parameters.AddWithValue("@enrollmentId", enrollmentId);
 
             sqlConnection.Open();
@@ -112,12 +113,13 @@ namespace WebApplication1.Controllers
             {
                 return BadRequest("EnrollmentId cannot be less than 1");
             }
-            string sqlQuery = @"SELECT Courses.CourceName 
-                                   FROM Students
-                                   INNER JOIN Courses ON Students.CourseId = Courses.Id	
-                                   WHERE EnrollmentId = @enrollmentId";
+            string sqlQuery = @" SELECT Courses.CourceName 
+                                 FROM Students
+                                 INNER JOIN Courses ON Students.CourseId = Courses.Id	
+                                 WHERE EnrollmentId = @enrollmentId";
 
-            var sqlCommand = new SqlCommand(sqlQuery, sqlConnection);
+            SqlCommand sqlCommand = new(sqlQuery, sqlConnection);
+
             sqlCommand.Parameters.AddWithValue("@enrollmentId", enrollmentId);
 
             sqlConnection.Open();
@@ -135,9 +137,9 @@ namespace WebApplication1.Controllers
             {
                 return BadRequest("CourseId should be greater than 0");
             }
-            SqlDataAdapter sqlDataAdapter = new(@"SELECT Students.Name FROM Students
-                                                  INNER JOIN Courses ON Students.CourseId = Courses.Id
-                                                  WHERE CourseId = @courseId ", sqlConnection);
+            SqlDataAdapter sqlDataAdapter = new(@" SELECT Students.Name FROM Students
+                                                   INNER JOIN Courses ON Students.CourseId = Courses.Id
+                                                   WHERE CourseId = @courseId ", sqlConnection);
 
             sqlDataAdapter.SelectCommand.Parameters.AddWithValue("@courseId", courseId);
 
