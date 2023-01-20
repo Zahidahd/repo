@@ -66,7 +66,7 @@ namespace WebApplication1.Controllers
         {
             if (teacherId < 1)
             {
-                return BadRequest("TeacherId Id should be greater than 0");
+                return BadRequest("TeacherId should be greater than 0");
             }
             SqlDataAdapter sqlDataAdapter = new("SELECT * FROM Teachers WHERE Id = @teacherId", sqlConnection);
 
@@ -131,7 +131,7 @@ namespace WebApplication1.Controllers
         {
             if (maximumSalary < minimumSalary)
             {
-                return BadRequest("Maximum salary cannot be smaller than minimum salary");
+                return BadRequest("Maximum salary cannot be less than minimum salary");
             }
             SqlDataAdapter sqlDataAdapter = new(@" SELECT * FROM Teachers 
                                                     WHERE Salary BETWEEN @minimumSalary AND @maximumSalary
@@ -170,19 +170,19 @@ namespace WebApplication1.Controllers
                 }
                 if (teacherDto.Age <= 25)
                 {
-                    return BadRequest("Invalid age, Teacher age should be above 25");
+                    return BadRequest("Invalid age, teacher age should be above 25");
                 }
                 if (teacherDto.Salary < 25000)
                 {
-                    return BadRequest("Invalid salary, Teacher salary should be above 25000");
+                    return BadRequest("Invalid salary, teacher salary should be above 25000");
                 }
 
                 if (ModelState.IsValid)
                 {
-                    string sqlQuery = $@"
-                    INSERT INTO Teachers(FullName, Age, Gender, SchoolName, Department, Salary)
-                    VALUES (@FullName, @Age, @Gender, @SchoolName, @Department, @Salary)
-                    Select Scope_Identity() ";
+                    string sqlQuery = $@" INSERT INTO Teachers(FullName, Age, Gender, SchoolName,
+                                          Department, Salary)
+                                          VALUES (@FullName, @Age, @Gender, @SchoolName, @Department, @Salary)
+                                          Select Scope_Identity() ";
 
                     SqlCommand sqlCommand = new(sqlQuery, sqlConnection);
 

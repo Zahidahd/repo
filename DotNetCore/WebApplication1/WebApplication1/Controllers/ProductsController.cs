@@ -122,7 +122,7 @@ namespace WebApplication1.Controllers
         {
             if (maximumPrice < minimumPrice)
             {
-                return BadRequest("Maximum price cannot be smaller than minimum price");
+                return BadRequest("Maximum price cannot be less than minimum price");
             }
 
             SqlDataAdapter sqlDataAdapter = new(@" SELECT * FROM Products 
@@ -151,7 +151,7 @@ namespace WebApplication1.Controllers
         {
             if (pincode.ToString().Length > 6 || pincode.ToString().Length < 6)
             {
-                return BadRequest("Pincode code should be of six digits only");
+                return BadRequest("Pincode should be of six digits only");
             }
             SqlDataAdapter sqlDataAdapter = new("SELECT * FROM Products WHERE Pincode = @pincode", sqlConnection);
 
@@ -224,7 +224,7 @@ namespace WebApplication1.Controllers
                 }
                 if (product.Price < 800)
                 {
-                    return BadRequest("product price should be minimum 800 or  more than 800");
+                    return BadRequest("Product price should be minimum 800 or more than 800");
                 }
 
                 if (ModelState.IsValid)
@@ -263,7 +263,7 @@ namespace WebApplication1.Controllers
         {
             if (productId < 1)
             {
-                return BadRequest("product Id should be greater than 0");
+                return BadRequest("product id should be greater than 0");
             }
             string sqlQuery = "SELECT ProductName FROM Products WHERE Id = @productId";
 

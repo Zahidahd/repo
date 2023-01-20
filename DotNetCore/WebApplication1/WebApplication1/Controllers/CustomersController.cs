@@ -65,7 +65,7 @@ namespace WebApplication1.Controllers
         {
             if (customerId < 1)
             {
-                return BadRequest("CustomerId should be greater than 0");
+                return BadRequest("Customer id should be greater than 0");
             }
             SqlDataAdapter sqlDataAdapter = new("SELECT * FROM Customers WHERE Id = @customerId", sqlConnection);
 
@@ -85,16 +85,16 @@ namespace WebApplication1.Controllers
         }
 
         [HttpGet]
-        [Route("GetCustomerDetailByGenderBYCountry/{gender}/{country}")]
-        public IActionResult GetCustomerDetailByGenderBYCountry(string gender, string country)
+        [Route("GetCustomersDetailByGenderByCountry/{gender}/{country}")]
+        public IActionResult GetCustomersDetailByGenderByCountry(string gender, string country)
         {
             if (gender.Length > 6)
             {
-                return BadRequest("Gender should not be more than 6 characters");
+                return BadRequest("Gender should not be more than of 6 characters");
             }
             if (country.Length > 10)
             {
-                return BadRequest("country should not be more than 10 characters");
+                return BadRequest("country should not be more than of 10 characters");
             }
 
             SqlDataAdapter sqlDataAdapter = new(@"SELECT * FROM Customers WHERE Gender = @gender
@@ -102,7 +102,6 @@ namespace WebApplication1.Controllers
 
             sqlDataAdapter.SelectCommand.Parameters.AddWithValue("@gender", gender);
             sqlDataAdapter.SelectCommand.Parameters.AddWithValue("@country", country);
-
 
             DataTable dataTable = new();
             sqlDataAdapter.Fill(dataTable);
@@ -153,7 +152,7 @@ namespace WebApplication1.Controllers
                 {
                     string sqlQuery = @"INSERT INTO Customers(Name, Gender, Age, Country)
                                         VALUES (@FullName, @Gender, @Age, @Country)
-                                        Select Scope_Identity() ";
+                                        Select Scope_Identity()";
 
                     SqlCommand sqlCommand = new(sqlQuery, sqlConnection);
                     sqlCommand.Parameters.AddWithValue("@FullName", customer.FullName);
@@ -184,9 +183,9 @@ namespace WebApplication1.Controllers
         {
             if (customerId < 1)
             {
-                return BadRequest("CustomerId Id should be greater than 0");
+                return BadRequest("Customer id should be greater than 0");
             }
-            string sqlQuery = "SELECT Name FROM Customers where id = @customerId";
+            string sqlQuery = "SELECT Name FROM Customers WHERE Id = @customerId";
 
             SqlCommand sqlCommand = new(sqlQuery, sqlConnection);
             sqlCommand.Parameters.AddWithValue("@customerId", customerId);

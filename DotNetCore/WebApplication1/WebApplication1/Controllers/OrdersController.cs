@@ -44,9 +44,9 @@ namespace WebApplication1.Controllers
         [Route("GetOrdersCount")]
         public IActionResult GetOrdersCount()
         {
-            string stringQuery = "SELECT COUNT(*) FROM Customers ";
+            string sqlQuery = "SELECT COUNT(*) FROM Customers ";
 
-            SqlCommand sqlCommand = new(stringQuery, sqlConnection);
+            SqlCommand sqlCommand = new(sqlQuery, sqlConnection);
 
             sqlConnection.Open();
             int orderCount = Convert.ToInt32(sqlCommand.ExecuteScalar());
@@ -56,7 +56,7 @@ namespace WebApplication1.Controllers
         }
 
         [HttpGet]
-        [Route("GetOrderDetail/{orderId}")]
+        [Route("GetOrderDetailById/{orderId}")]
         public IActionResult GetOrderDetailById(int orderId)
         {
             if (orderId < 1)
@@ -81,11 +81,10 @@ namespace WebApplication1.Controllers
         }
 
         [HttpGet]
-        [Route("GetOrderDetailByOrderDate/{orderDate}")]
-        public IActionResult GetOrderDetailByOrderDate(string orderDate)
+        [Route("GetOrdersDetailByOrderDate/{orderDate}")]
+        public IActionResult GetOrdersDetailByOrderDate(string orderDate)
         {
             var orderDateTime = DateTime.Parse(orderDate);
-
             if (orderDateTime > DateTime.Now)
             {
                 return BadRequest("Order Date cannot be greater than current date");

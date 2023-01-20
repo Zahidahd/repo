@@ -89,7 +89,7 @@ namespace WebApplication1.Controllers
         {
             if (salary < 8000)
             {
-                return BadRequest("Please Enter salary above 8000");
+                return BadRequest("Please enter salary above 8000");
             }
             SqlDataAdapter sqlDataAdapter = new(@"SELECT * FROM Employees WHERE Gender = @gender 
                                                    AND Salary > @salary", sqlConnection);
@@ -110,21 +110,21 @@ namespace WebApplication1.Controllers
             }
         }
 
-        [HttpGet]
-        [Route("GetEmployeeBySalaryRange/{minimumSalary}/{maximumSalary}")]
-        public IActionResult GetEmployeeBySalaryRange(int minimumSalary, int maximumSalary)
+        [HttpGet]   
+        [Route("GetEmployeesBySalaryRange/{minimumSalary}/{maximumSalary}")]
+        public IActionResult GetEmployeesBySalaryRange(int minimumSalary, int maximumSalary)
         {
             if(maximumSalary < minimumSalary)
             {
-                return BadRequest("maximumSalary cannot be less than minimumSalary");
+                return BadRequest("maximum salary can not be less than minimumSalary");
             }
             if (minimumSalary < 8000)
             {
-                return BadRequest("Please Enter minimumSalary salary above 8000");
+                return BadRequest("Please enter minimum salary above 8000");
             }
             if (maximumSalary > 500000)
             {
-                return BadRequest("Please Enter maximumSalary salary less than 500000");
+                return BadRequest("Please enter maximum salary less than 500000");
             }
                SqlDataAdapter sqlDataAdapter = new(@" SELECT * FROM Employees 
                                                       WHERE Salary BETWEEN @minimumSalary
@@ -169,11 +169,11 @@ namespace WebApplication1.Controllers
 
                 if (employee.FullName.Length < 3 || employee.FullName.Length > 30)
                 {
-                    return BadRequest("Name should be between 3 and 30 characters.");
+                    return BadRequest("FullName should be between 3 and 30 characters.");
                 }
                 if (employee.Salary < 8000)
                 {
-                    return BadRequest("Invalid salary, Employee salary should be above 8000");
+                    return BadRequest("Invalid salary, employee salary should be above 8000");
                 }
 
                 if (ModelState.IsValid)
