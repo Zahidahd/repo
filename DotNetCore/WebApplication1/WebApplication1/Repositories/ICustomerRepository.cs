@@ -8,6 +8,9 @@ namespace WebApplication1.Repositories
         public DataTable GetAllCustomers();
         public DataTable GetCustomerDetailById(int customerId);
         public int GetCustomersCount();
+        public DataTable GetCustomersDetailByGenderByCountry(string gender, string country);
+        public int Add(CustomerDto customer);
+        public string GetCustomerFullNameById(int customerId);
     }
 }
         

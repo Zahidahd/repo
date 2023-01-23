@@ -88,13 +88,9 @@ namespace WebApplication1.Controllers
                 return BadRequest("country should not be more than of 10 characters");
             }
 
-            SqlDataAdapter sqlDataAdapter = new(@"SELECT * FROM Customers WHERE Gender = @gender
-                                                  AND Country = @country ", sqlConnection);
-            sqlDataAdapter.SelectCommand.Parameters.AddWithValue("@gender", gender);
-            sqlDataAdapter.SelectCommand.Parameters.AddWithValue("@country", country);
-            DataTable dataTable = new();
-            sqlDataAdapter.Fill(dataTable);
-
+            CustomerRepository customerRepository = new(_Configuration);
+            DataTable dataTable = customerRepository.GetCustomersDetailByGenderByCountry(gender, country);
+           
             if (dataTable.Rows.Count > 0)
             {
                 return Ok(JsonConvert.SerializeObject(dataTable));
@@ -139,21 +135,11 @@ namespace WebApplication1.Controllers
 
                 if (ModelState.IsValid)
                 {
-                    string sqlQuery = @"INSERT INTO Customers(Name, Gender, Age, Country)
-                                        VALUES (@FullName, @Gender, @Age, @Country)
-                                        Select Scope_Identity()";
-                    SqlCommand sqlCommand = new(sqlQuery, sqlConnection);
-                    sqlCommand.Parameters.AddWithValue("@FullName", customer.FullName);
-                    sqlCommand.Parameters.AddWithValue("@Gender", customer.Gender);
-                    sqlCommand.Parameters.AddWithValue("@Age", customer.Age);
-                    sqlCommand.Parameters.AddWithValue("@Country", customer.Country);
-                    sqlConnection.Open();
-                    customer.Id = Convert.ToInt32(sqlCommand.ExecuteScalar());
-                    sqlConnection.Close();
-
-                    return Ok(customer.Id);
+                   CustomerRepository customerRepository = new(_Configuration);
+                   int id = customerRepository.Add(customer);
+                   return Ok(id);
                 }
-                return BadRequest();
+                return BadRequest();    
             }
             catch (Exception ex)
             {
@@ -171,15 +157,10 @@ namespace WebApplication1.Controllers
             if (customerId < 1)
             {
                 return BadRequest("Customer id should be greater than 0");
-            }
+            } 
 
-            string sqlQuery = "SELECT Name FROM Customers WHERE Id = @customerId";
-            SqlCommand sqlCommand = new(sqlQuery, sqlConnection);
-            sqlCommand.Parameters.AddWithValue("@customerId", customerId);
-            sqlConnection.Open();
-            string customerFullName = Convert.ToString(sqlCommand.ExecuteScalar());
-            sqlConnection.Close();
-
+            CustomerRepository customerRepository= new(_Configuration);
+            string customerFullName = customerRepository.GetCustomerFullNameById(customerId);
             return Ok(customerFullName);
         }
     }
