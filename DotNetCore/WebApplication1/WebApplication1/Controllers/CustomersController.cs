@@ -10,6 +10,7 @@ using System.Text.Json.Serialization;
 using Newtonsoft.Json;
 using System.Reflection;
 using WebApplication1.DTO.InputDTO;
+using WebApplication1.Repositories;
 
 namespace WebApplication1.Controllers
 {
@@ -28,16 +29,15 @@ namespace WebApplication1.Controllers
 
         [HttpGet]
         [Route("GetAllCustomers")]
-        public IActionResult GetAllProducts()
+        public IActionResult GetAllCustomers()
         {
-            SqlDataAdapter sqlDataAdapter = new("SELECT * FROM Customers", sqlConnection);
-            DataTable dataTable = new();
-            sqlDataAdapter.Fill(dataTable);
+            CustomerRepository customerRepository = new(_Configuration);
+            DataTable dataTable = customerRepository.GetAllCustomers();
 
             if (dataTable.Rows.Count > 0)
             {
                 return Ok(JsonConvert.SerializeObject(dataTable));
-            }
+            }   
             else
             {
                 return NotFound();
@@ -48,12 +48,8 @@ namespace WebApplication1.Controllers
         [Route("GetCustomersCount")]
         public IActionResult GetCustomersCount()
         {
-            string sqlQuery = "SELECT COUNT(*) FROM Customers ";
-            SqlCommand sqlCommand = new(sqlQuery, sqlConnection);
-            sqlConnection.Open();
-            int customerCount = Convert.ToInt32(sqlCommand.ExecuteScalar());
-            sqlConnection.Close();
-
+            CustomerRepository customerRepository = new(_Configuration);
+            int customerCount = customerRepository.GetCustomersCount();
             return Ok(customerCount);
         }
 
@@ -66,10 +62,8 @@ namespace WebApplication1.Controllers
                 return BadRequest("Customer id should be greater than 0");
             }
 
-            SqlDataAdapter sqlDataAdapter = new("SELECT * FROM Customers WHERE Id = @customerId", sqlConnection);
-            sqlDataAdapter.SelectCommand.Parameters.AddWithValue("@customerId", customerId);
-            DataTable dataTable = new();
-            sqlDataAdapter.Fill(dataTable);
+            CustomerRepository customerRepository = new(_Configuration);
+            DataTable dataTable = customerRepository.GetCustomerDetailById(customerId);
 
             if (dataTable.Rows.Count > 0)
             {
