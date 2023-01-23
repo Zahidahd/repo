@@ -47,9 +47,7 @@ namespace WebApplication1.Controllers
         public IActionResult GetEmployeesCount()
         {
             string sqlQuery = "SELECT COUNT(*) FROM Employees ";
-
             SqlCommand sqlCommand = new(sqlQuery, sqlConnection);
-
             sqlConnection.Open();
             int employeeCount = Convert.ToInt32(sqlCommand.ExecuteScalar());
             sqlConnection.Close();
@@ -67,9 +65,7 @@ namespace WebApplication1.Controllers
             }
 
             SqlDataAdapter sqlDataAdapter = new("SELECT * FROM Employees WHERE Id = @employeeId", sqlConnection);
-
             sqlDataAdapter.SelectCommand.Parameters.AddWithValue("@employeeId", employeeId);
-
             DataTable dataTable = new();
             sqlDataAdapter.Fill(dataTable);
 
@@ -91,12 +87,11 @@ namespace WebApplication1.Controllers
             {
                 return BadRequest("Please enter salary above 8000");
             }
-            SqlDataAdapter sqlDataAdapter = new(@"SELECT * FROM Employees WHERE Gender = @gender 
-                                                   AND Salary > @salary", sqlConnection);
 
+            SqlDataAdapter sqlDataAdapter = new(@"SELECT * FROM Employees WHERE Gender = @gender 
+                                                  AND Salary > @salary", sqlConnection);
             sqlDataAdapter.SelectCommand.Parameters.AddWithValue("@gender", gender);
             sqlDataAdapter.SelectCommand.Parameters.AddWithValue("@salary", salary);
-
             DataTable dataTable = new();
             sqlDataAdapter.Fill(dataTable);
 
@@ -130,10 +125,8 @@ namespace WebApplication1.Controllers
                                                       WHERE Salary BETWEEN @minimumSalary
                                                       AND @maximumSalary
                                                       ORDER BY Salary", sqlConnection);
-
             sqlDataAdapter.SelectCommand.Parameters.AddWithValue("@minimumSalary", minimumSalary);
             sqlDataAdapter.SelectCommand.Parameters.AddWithValue("@maximumSalary", maximumSalary);
-
             DataTable  dataTable = new();
             sqlDataAdapter.Fill(dataTable);
 
@@ -154,8 +147,7 @@ namespace WebApplication1.Controllers
             try
             {
                 Regex regex = new Regex(@"^([\w\.\-]+)@([\w\-]+)((\.(\w){2,3})+)$");
-                Match match = regex.Match(employee.Email);
-                
+                Match match = regex.Match(employee.Email); 
                 if (!match.Success)
                 {
                     return BadRequest("Email is invalid");
@@ -175,22 +167,17 @@ namespace WebApplication1.Controllers
                 {
                     return BadRequest("Invalid salary, employee salary should be above 8000");
                 }
-
-                if (ModelState.IsValid)
-
                     if (ModelState.IsValid)
                     {
                         string sqlQuery = @"INSERT INTO Employees(FullName, Email, Gender, DateOfJoining, Salary)
                                             VALUES (@FullName, @Email, @Gender, @DateOfJoining, @Salary)
                                             Select Scope_Identity() ";
-
                         SqlCommand sqlCommand = new(sqlQuery, sqlConnection);
                         sqlCommand.Parameters.AddWithValue("@FullName", employee.FullName);
                         sqlCommand.Parameters.AddWithValue("@Email", employee.Email);
                         sqlCommand.Parameters.AddWithValue("@Gender", employee.Gender);
                         sqlCommand.Parameters.AddWithValue("@DateOfJoining", employee.DateOfJoining);
                         sqlCommand.Parameters.AddWithValue("@Salary", employee.Salary);
-
                         sqlConnection.Open();
                         employee.Id = Convert.ToInt32(sqlCommand.ExecuteScalar());
                         sqlConnection.Close();
@@ -216,11 +203,10 @@ namespace WebApplication1.Controllers
             {
                 return BadRequest("Employee Id should not be less than 1");
             }
-            string sqlQuery = "SELECT FullName FROM Employees WHERE Id = @employeeId";
 
+            string sqlQuery = "SELECT FullName FROM Employees WHERE Id = @employeeId";
             SqlCommand sqlCommand = new(sqlQuery, sqlConnection);
             sqlCommand.Parameters.AddWithValue("@employeeId", employeeId);
-
             sqlConnection.Open();
             string employeeFullName = Convert.ToString(sqlCommand.ExecuteScalar());
             sqlConnection.Close();

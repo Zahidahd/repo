@@ -33,10 +33,12 @@ namespace WebApplication1.Controllers
             SqlDataAdapter sqlDataAdapter = new("SELECT * FROM Doctors", sqlConnection);
             DataTable dataTable = new();
             sqlDataAdapter.Fill(dataTable);
+            DataTable copyDataTable = dataTable.Copy();
+            sqlDataAdapter.Fill(copyDataTable);
 
-            if (dataTable.Rows.Count > 0)
+            if(copyDataTable.Rows.Count > 0)
             {
-                return Ok(JsonConvert.SerializeObject(dataTable));
+                return Ok(JsonConvert.SerializeObject(copyDataTable));
             }
             else
             {
@@ -49,9 +51,7 @@ namespace WebApplication1.Controllers
         public IActionResult GetDoctorsCount()
         {
             string sqlQuery = "SELECT COUNT(*) FROM Doctors";
-
             SqlCommand sqlCommand = new(sqlQuery, sqlConnection);
-
             sqlConnection.Open();
             int doctorCount = Convert.ToInt32(sqlCommand.ExecuteScalar());
             sqlConnection.Close();
@@ -67,10 +67,9 @@ namespace WebApplication1.Controllers
             {
                 return BadRequest("Doctor Id should be greater than 0");
             }
+
             SqlDataAdapter sqlDataAdapter = new("SELECT * FROM Doctors WHERE Id = @doctorId", sqlConnection);
-
             sqlDataAdapter.SelectCommand.Parameters.AddWithValue("@doctorId", doctorId);
-
             DataTable dataTable = new();
             sqlDataAdapter.Fill(dataTable);
 
@@ -102,11 +101,10 @@ namespace WebApplication1.Controllers
             {
                 return BadRequest("Department should be between 3 and 30 characters.");
             }
-            SqlDataAdapter sqlDataAdapter = new("SELECT * FROM Doctors WHERE Department = @department AND Name = @doctorName ", sqlConnection);
 
+            SqlDataAdapter sqlDataAdapter = new("SELECT * FROM Doctors WHERE Department = @department AND Name = @doctorName ", sqlConnection);
             sqlDataAdapter.SelectCommand.Parameters.AddWithValue("@department", department);
             sqlDataAdapter.SelectCommand.Parameters.AddWithValue("@doctorName", doctorName);
-
             DataTable dataTable = new();
             sqlDataAdapter.Fill(dataTable);
 
@@ -132,8 +130,8 @@ namespace WebApplication1.Controllers
             {
                 return BadRequest("Department should be between 3 and 30 characters.");
             }
-            SqlDataAdapter sqlDataAdapter = new("SELECT * FROM Doctors WHERE Department = @department", sqlConnection);
 
+            SqlDataAdapter sqlDataAdapter = new("SELECT * FROM Doctors WHERE Department = @department", sqlConnection);
             sqlDataAdapter.SelectCommand.Parameters.AddWithValue("@department", department);
 
             DataTable dataTable = new();
@@ -159,8 +157,12 @@ namespace WebApplication1.Controllers
                 {
                     return BadRequest("FullName cannot be blank");
                 }
+
                 doctor.FullName = doctor.FullName.Trim();
-                if (doctor.FullName.Length < 3 || doctor.FullName.Length > 30)
+                string completeFullName = doctor.FullName.Insert(0, "Mr.");
+                string completeFullName2 = completeFullName.Replace("Mr.", "Janab.");
+                
+                if (completeFullName2.Length < 3 || completeFullName2.Length > 30)
                 {
                     return BadRequest("FullName should be between 3 and 30 characters");
                 }
@@ -175,13 +177,10 @@ namespace WebApplication1.Controllers
                     string sqlQuery = @"INSERT INTO Doctors(Name, Department, City)
                                         VALUES(@FullName, @Department, @City)
                                         Select Scope_Identity()";
-
                     SqlCommand sqlCommand = new(sqlQuery, sqlConnection);
-
-                    sqlCommand.Parameters.AddWithValue("@FullName", doctor.FullName);
+                    sqlCommand.Parameters.AddWithValue("@FullName", completeFullName2);
                     sqlCommand.Parameters.AddWithValue("@Department", doctor.Department);
                     sqlCommand.Parameters.AddWithValue("@City", doctor.City);
-
                     sqlConnection.Open();
                     doctor.Id = Convert.ToInt32(sqlCommand.ExecuteScalar());
                     sqlConnection.Close();
@@ -207,17 +206,16 @@ namespace WebApplication1.Controllers
             {
                 return BadRequest("Doctor Id cannot be less than 1");
             }
+
             string sqlQuery = "SELECT Name FROM Doctors WHERE Id = @doctorId";
-
             SqlCommand sqlCommand = new(sqlQuery, sqlConnection);
-
             sqlCommand.Parameters.AddWithValue("@doctorId", doctorId);
-
             sqlConnection.Open();
             string doctorFullName = Convert.ToString(sqlCommand.ExecuteScalar());
+            string subStringDoctorFullName = doctorFullName.Substring(3);
             sqlConnection.Close();
 
-            return Ok(doctorFullName);
+            return Ok(subStringDoctorFullName);
         }
     }
 }

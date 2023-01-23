@@ -45,9 +45,7 @@ namespace WebApplication1.Controllers
         public IActionResult GetProductsCount()
         {
             string sqlQuery = "SELECT COUNT(*) FROM Products ";
-
             SqlCommand sqlCommand = new(sqlQuery, sqlConnection);
-
             sqlConnection.Open();
             int productCount = Convert.ToInt32(sqlCommand.ExecuteScalar());
             sqlConnection.Close();
@@ -63,10 +61,9 @@ namespace WebApplication1.Controllers
             {
                 return BadRequest("ProductId should be greater than 0");
             }
+
             SqlDataAdapter sqlDataAdapter = new("SELECT * FROM Products WHERE Id = @productId", sqlConnection);
-
             sqlDataAdapter.SelectCommand.Parameters.AddWithValue("@productId", productId);
-
             DataTable dataTable = new();
             sqlDataAdapter.Fill(dataTable);
 
@@ -97,12 +94,11 @@ namespace WebApplication1.Controllers
             {
                 return BadRequest("priceUpto should be greater than 600");
             }
+
             SqlDataAdapter sqlDataAdapter = new(@"SELECT * FROM Products WHERE BrandName = @brandName AND
                                                     Price <= @priceUpto", sqlConnection);
-
             sqlDataAdapter.SelectCommand.Parameters.AddWithValue("@brandName", brandName);
             sqlDataAdapter.SelectCommand.Parameters.AddWithValue("@priceUpto", priceUpto);
-
             DataTable dataTable = new();
             sqlDataAdapter.Fill(dataTable);
 
@@ -128,10 +124,8 @@ namespace WebApplication1.Controllers
             SqlDataAdapter sqlDataAdapter = new(@" SELECT * FROM Products 
                                                     WHERE Price BETWEEN @minimumPrice AND @maximumPrice
                                                     ORDER BY Price", sqlConnection);
-
             sqlDataAdapter.SelectCommand.Parameters.AddWithValue("@minimumPrice", minimumPrice);
             sqlDataAdapter.SelectCommand.Parameters.AddWithValue("@maximumPrice", maximumPrice);
-
             DataTable dataTable = new();
             sqlDataAdapter.Fill(dataTable);
 
@@ -153,10 +147,10 @@ namespace WebApplication1.Controllers
             {
                 return BadRequest("Pincode should be of six digits only");
             }
+
             SqlDataAdapter sqlDataAdapter = new("SELECT * FROM Products WHERE Pincode = @pincode", sqlConnection);
 
             sqlDataAdapter.SelectCommand.Parameters.AddWithValue("@pincode", pincode);
-
             DataTable dataTable = new();
             sqlDataAdapter.Fill(dataTable);
 
@@ -193,7 +187,6 @@ namespace WebApplication1.Controllers
             SqlDataAdapter sqlDataAdapter = new(sqlQuery, sqlConnection);
             sqlDataAdapter.SelectCommand.Parameters.AddWithValue("@brandName", brandName);
             sqlDataAdapter.SelectCommand.Parameters.AddWithValue("@productName", productName);
-
             DataTable dataTable = new();
             sqlDataAdapter.Fill(dataTable);
 
@@ -232,14 +225,11 @@ namespace WebApplication1.Controllers
                     string sqlQuery = @"INSERT INTO Products(ProductName, BrandName, Price, LaunchDate)
                                         VALUES (@ProductName, @BrandName, @Price, @LaunchDate)
                                         Select Scope_Identity() ";
-
                     SqlCommand sqlCommand = new(sqlQuery, sqlConnection);
-
                     sqlCommand.Parameters.AddWithValue("@ProductName", product.ProductName);
                     sqlCommand.Parameters.AddWithValue("@BrandName", product.BrandName);
                     sqlCommand.Parameters.AddWithValue("@Price", product.Price);
                     sqlCommand.Parameters.AddWithValue("@LaunchDate", product.LaunchDate);
-
                     sqlConnection.Open();
                     product.Id = Convert.ToInt32(sqlCommand.ExecuteScalar());
                     sqlConnection.Close();
@@ -265,11 +255,10 @@ namespace WebApplication1.Controllers
             {
                 return BadRequest("product id should be greater than 0");
             }
-            string sqlQuery = "SELECT ProductName FROM Products WHERE Id = @productId";
 
+            string sqlQuery = "SELECT ProductName FROM Products WHERE Id = @productId";
             SqlCommand sqlCommand = new(sqlQuery, sqlConnection);
             sqlCommand.Parameters.AddWithValue("@productId", productId);
-
             sqlConnection.Open();
             string productName = Convert.ToString(sqlCommand.ExecuteScalar());
             sqlConnection.Close();

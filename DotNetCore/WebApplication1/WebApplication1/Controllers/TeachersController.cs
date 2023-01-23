@@ -50,9 +50,7 @@ namespace WebApplication1.Controllers
         public IActionResult GetTeachersCount()
         {
             string sqlQuery = "SELECT COUNT(*) FROM Teachers";
-
             SqlCommand sqlCommand = new(sqlQuery, sqlConnection);
-
             sqlConnection.Open();
             int customerCount = Convert.ToInt32(sqlCommand.ExecuteScalar());
             sqlConnection.Close();
@@ -68,10 +66,9 @@ namespace WebApplication1.Controllers
             {
                 return BadRequest("TeacherId should be greater than 0");
             }
+
             SqlDataAdapter sqlDataAdapter = new("SELECT * FROM Teachers WHERE Id = @teacherId", sqlConnection);
-
             sqlDataAdapter.SelectCommand.Parameters.AddWithValue("@teacherId", teacherId);
-
             DataTable dataTable = new();
             sqlDataAdapter.Fill(dataTable);
 
@@ -108,10 +105,8 @@ namespace WebApplication1.Controllers
 
             SqlDataAdapter sqlDataAdapter = new(@"SELECT * FROM Teachers WHERE FullName = @teacherName
                                                   AND Department = @department", sqlConnection);
-
             sqlDataAdapter.SelectCommand.Parameters.AddWithValue("@teacherName", teacherName);
             sqlDataAdapter.SelectCommand.Parameters.AddWithValue("@department", department);
-
             DataTable dataTable = new();
             sqlDataAdapter.Fill(dataTable);
 
@@ -133,13 +128,12 @@ namespace WebApplication1.Controllers
             {
                 return BadRequest("Maximum salary cannot be less than minimum salary");
             }
-            SqlDataAdapter sqlDataAdapter = new(@" SELECT * FROM Teachers 
-                                                    WHERE Salary BETWEEN @minimumSalary AND @maximumSalary
-                                                    ORDER BY Salary", sqlConnection);
 
+            SqlDataAdapter sqlDataAdapter = new(@" SELECT * FROM Teachers 
+                                                   WHERE Salary BETWEEN @minimumSalary AND @maximumSalary
+                                                   ORDER BY Salary", sqlConnection);
             sqlDataAdapter.SelectCommand.Parameters.AddWithValue("@minimumSalary", minimumSalary);
             sqlDataAdapter.SelectCommand.Parameters.AddWithValue("@maximumSalary", maximumSalary);
-
             DataTable dataTable = new();
             sqlDataAdapter.Fill(dataTable);
 
@@ -179,20 +173,17 @@ namespace WebApplication1.Controllers
 
                 if (ModelState.IsValid)
                 {
-                    string sqlQuery = $@" INSERT INTO Teachers(FullName, Age, Gender, SchoolName,
+                    string sqlQuery = @" INSERT INTO Teachers(FullName, Age, Gender, SchoolName,
                                           Department, Salary)
                                           VALUES (@FullName, @Age, @Gender, @SchoolName, @Department, @Salary)
                                           Select Scope_Identity() ";
-
                     SqlCommand sqlCommand = new(sqlQuery, sqlConnection);
-
                     sqlCommand.Parameters.AddWithValue("@FullName", teacherDto.FullName);
                     sqlCommand.Parameters.AddWithValue("@Age", teacherDto.Age);
                     sqlCommand.Parameters.AddWithValue("@Gender", teacherDto.Gender);
                     sqlCommand.Parameters.AddWithValue("@SchoolName", teacherDto.SchoolName);
                     sqlCommand.Parameters.AddWithValue("@Department", teacherDto.Department);
                     sqlCommand.Parameters.AddWithValue("@Salary", teacherDto.Salary);
-
                     sqlConnection.Open();
                     teacherDto.Id = Convert.ToInt32(sqlCommand.ExecuteScalar());
                     sqlConnection.Close();
@@ -220,10 +211,8 @@ namespace WebApplication1.Controllers
             }
 
             string sqlQuery = "SELECT FullName FROM Teachers WHERE Id = @teacherId";
-
             SqlCommand sqlCommand = new(sqlQuery, sqlConnection);
             sqlCommand.Parameters.AddWithValue("@teacherId", teacherId);
-
             sqlConnection.Open();
             string teacherFullName = Convert.ToString(sqlCommand.ExecuteScalar());
             sqlConnection.Close();

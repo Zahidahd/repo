@@ -45,9 +45,7 @@ namespace WebApplication1.Controllers
         public IActionResult GetOrdersCount()
         {
             string sqlQuery = "SELECT COUNT(*) FROM Customers ";
-
             SqlCommand sqlCommand = new(sqlQuery, sqlConnection);
-
             sqlConnection.Open();
             int orderCount = Convert.ToInt32(sqlCommand.ExecuteScalar());
             sqlConnection.Close();
@@ -63,10 +61,9 @@ namespace WebApplication1.Controllers
             {
                 return BadRequest("OrderId should be greater than 0");
             }
+
             SqlDataAdapter sqlDataAdapter = new("SELECT * FROM Orders WHERE Id = @orderId", sqlConnection);
-
             sqlDataAdapter.SelectCommand.Parameters.AddWithValue("@orderId", orderId);
-
             DataTable dataTable = new();
             sqlDataAdapter.Fill(dataTable);
 
@@ -89,10 +86,9 @@ namespace WebApplication1.Controllers
             {
                 return BadRequest("Order Date cannot be greater than current date");
             }
+
             SqlDataAdapter sqlDataAdapter = new("SELECT * FROM Orders WHERE OrderDate = @orderDateTime", sqlConnection);
-
             sqlDataAdapter.SelectCommand.Parameters.AddWithValue("@orderDateTime", orderDateTime);
-
             DataTable dataTable = new();
             sqlDataAdapter.Fill(dataTable);
 
@@ -143,14 +139,11 @@ namespace WebApplication1.Controllers
                         string sqlQuery = @" INSERT INTO Orders(CustomerId, OrderDate, Amount, ProductName)
                                              VALUES (@CustomerId, @OrderDate, @Amount, @ProductName)
                                              Select Scope_Identity() ";
-
                         SqlCommand sqlCommand = new(sqlQuery, sqlConnection);
-
                         sqlCommand.Parameters.AddWithValue("@CustomerId", order.CustomerId);
                         sqlCommand.Parameters.AddWithValue("@OrderDate", order.OrderDate);
                         sqlCommand.Parameters.AddWithValue("@Amount", order.Amount);
                         sqlCommand.Parameters.AddWithValue("@ProductName", order.ProductName);
-
                         sqlConnection.Open();
                         order.Id = Convert.ToInt32(sqlCommand.ExecuteScalar());
                         sqlConnection.Close();

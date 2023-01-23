@@ -49,9 +49,7 @@ namespace WebApplication1.Controllers
         public IActionResult GetCustomersCount()
         {
             string sqlQuery = "SELECT COUNT(*) FROM Customers ";
-
             SqlCommand sqlCommand = new(sqlQuery, sqlConnection);
-
             sqlConnection.Open();
             int customerCount = Convert.ToInt32(sqlCommand.ExecuteScalar());
             sqlConnection.Close();
@@ -67,10 +65,9 @@ namespace WebApplication1.Controllers
             {
                 return BadRequest("Customer id should be greater than 0");
             }
+
             SqlDataAdapter sqlDataAdapter = new("SELECT * FROM Customers WHERE Id = @customerId", sqlConnection);
-
             sqlDataAdapter.SelectCommand.Parameters.AddWithValue("@customerId", customerId);
-
             DataTable dataTable = new();
             sqlDataAdapter.Fill(dataTable);
 
@@ -99,10 +96,8 @@ namespace WebApplication1.Controllers
 
             SqlDataAdapter sqlDataAdapter = new(@"SELECT * FROM Customers WHERE Gender = @gender
                                                   AND Country = @country ", sqlConnection);
-
             sqlDataAdapter.SelectCommand.Parameters.AddWithValue("@gender", gender);
             sqlDataAdapter.SelectCommand.Parameters.AddWithValue("@country", country);
-
             DataTable dataTable = new();
             sqlDataAdapter.Fill(dataTable);
 
@@ -153,13 +148,11 @@ namespace WebApplication1.Controllers
                     string sqlQuery = @"INSERT INTO Customers(Name, Gender, Age, Country)
                                         VALUES (@FullName, @Gender, @Age, @Country)
                                         Select Scope_Identity()";
-
                     SqlCommand sqlCommand = new(sqlQuery, sqlConnection);
                     sqlCommand.Parameters.AddWithValue("@FullName", customer.FullName);
                     sqlCommand.Parameters.AddWithValue("@Gender", customer.Gender);
                     sqlCommand.Parameters.AddWithValue("@Age", customer.Age);
                     sqlCommand.Parameters.AddWithValue("@Country", customer.Country);
-
                     sqlConnection.Open();
                     customer.Id = Convert.ToInt32(sqlCommand.ExecuteScalar());
                     sqlConnection.Close();
@@ -185,11 +178,10 @@ namespace WebApplication1.Controllers
             {
                 return BadRequest("Customer id should be greater than 0");
             }
-            string sqlQuery = "SELECT Name FROM Customers WHERE Id = @customerId";
 
+            string sqlQuery = "SELECT Name FROM Customers WHERE Id = @customerId";
             SqlCommand sqlCommand = new(sqlQuery, sqlConnection);
             sqlCommand.Parameters.AddWithValue("@customerId", customerId);
-
             sqlConnection.Open();
             string customerFullName = Convert.ToString(sqlCommand.ExecuteScalar());
             sqlConnection.Close();
