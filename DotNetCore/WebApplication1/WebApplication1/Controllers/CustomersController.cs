@@ -19,12 +19,10 @@ namespace WebApplication1.Controllers
     public class CustomersController : ControllerBase
     {
         public readonly IConfiguration _Configuration;
-        SqlConnection sqlConnection;
 
         public CustomersController(IConfiguration configuration)
         {
             _Configuration = configuration;
-            sqlConnection = new(_Configuration.GetConnectionString("ECommerceDBConnection").ToString());
         }
 
         [HttpGet]
@@ -107,30 +105,10 @@ namespace WebApplication1.Controllers
         {
             try
             {
-                if (string.IsNullOrWhiteSpace(customer.FullName))
+                string errorMessage = validateCustomerRegisterOrUpdate(customer);
+                if (!string.IsNullOrEmpty(errorMessage))
                 {
-                    return BadRequest("FullName can not be blank");
-                }
-
-                customer.FullName = customer.FullName.Trim();
-                customer.Gender = customer.Gender.Trim();
-                customer.Country = customer.Country.Trim();
-
-                if (customer.FullName.Length < 3 || customer.FullName.Length > 30)
-                {
-                    return BadRequest("FullName should be between 3 and 30 characters.");
-                }
-                if (customer.Age <= 18)
-                {
-                    return BadRequest("Invalid age, customer age should be above 18");
-                }
-                if (string.IsNullOrWhiteSpace(customer.Country))
-                {
-                    return BadRequest("Country can not be blank");
-                }
-                if (string.IsNullOrWhiteSpace(customer.Gender))
-                {
-                    return BadRequest("Gender can not be blank");
+                    return BadRequest(errorMessage);
                 }
 
                 if (ModelState.IsValid)
@@ -150,6 +128,39 @@ namespace WebApplication1.Controllers
             }
         }
 
+        private string validateCustomerRegisterOrUpdate(CustomerDto customer)
+        {
+            string errorMessage = "";
+            
+            customer.FullName = customer.FullName.Trim();
+            customer.Gender = customer.Gender.Trim();
+            customer.Country = customer.Country.Trim();
+
+
+            if(string.IsNullOrWhiteSpace(customer.FullName))
+            {
+                errorMessage = "FullName can not be blank";
+            }
+            else if(customer.FullName.Length < 3 || customer.FullName.Length > 30)
+            {
+                errorMessage = "FullName should be between 3 and 30 characters.";
+            }
+            else if(customer.Age <= 18)
+            {
+                errorMessage = "Invalid age, customer age should be above 18";
+            }
+            else if(string.IsNullOrWhiteSpace(customer.Country))
+            {
+                errorMessage = "Country can not be blank";
+            }
+            else if(string.IsNullOrWhiteSpace(customer.Gender))
+            {
+                errorMessage = "Gender can not be blank";
+            }
+
+            return errorMessage;
+        }
+
         [HttpGet]
         [Route("GetCustomerFullNameById/{CustomerId}")]
         public IActionResult GetCustomerFullNameById(int customerId)
@@ -162,6 +173,40 @@ namespace WebApplication1.Controllers
             CustomerRepository customerRepository= new(_Configuration);
             string customerFullName = customerRepository.GetCustomerFullNameById(customerId);
             return Ok(customerFullName);
+        }
+
+        [HttpPost]
+        [Route("CustomerUpdate")]
+        public IActionResult CustomerUpdate([FromBody] CustomerDto customer)
+        {
+            try
+            {
+                if (customer.Id < 1)
+                {
+                    return BadRequest("Id can not be less than 0");
+                }
+
+                string errorMessage = validateCustomerRegisterOrUpdate(customer);
+                if (!string.IsNullOrEmpty(errorMessage))
+                {
+                    return BadRequest(errorMessage);
+                }
+
+                if (ModelState.IsValid)
+                {
+                    CustomerRepository customerRepository = new(_Configuration);
+                    customerRepository.Update(customer);
+                    return Ok("Record updated");
+                }
+                return BadRequest("Record not updated");
+            }
+            catch (Exception ex)
+            {
+                ModelState.AddModelError("", @"Unable to save changes. 
+                    Try again, and if the problem persists 
+                    see your system administrator.");
+                return StatusCode(StatusCodes.Status500InternalServerError);
+            }
         }
     }
 }

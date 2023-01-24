@@ -10,6 +10,7 @@ namespace WebApplication1.Repositories
         public int GetCustomersCount();
         public DataTable GetCustomersDetailByGenderByCountry(string gender, string country);
         public int Add(CustomerDto customer);
+        public void Update(CustomerDto customer);
         public string GetCustomerFullNameById(int customerId);
     }
 }

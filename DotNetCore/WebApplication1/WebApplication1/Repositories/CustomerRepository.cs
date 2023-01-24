@@ -70,6 +70,22 @@ namespace WebApplication1.Repositories
             return customer.Id;
         }
 
+        public void Update(CustomerDto customer)
+        {
+            string sqlQuery = @" UPDATE Customers SET Name = @FullName, Gender = @Gender,
+                                 Age = @Age, Country = @Country
+                                 WHERE Id = @Id ";                      
+            SqlCommand sqlCommand = new(sqlQuery, sqlConnection);
+            sqlCommand.Parameters.AddWithValue("@Id", customer.Id);
+            sqlCommand.Parameters.AddWithValue("@FullName", customer.FullName);
+            sqlCommand.Parameters.AddWithValue("@Gender", customer.Gender);
+            sqlCommand.Parameters.AddWithValue("@Age", customer.Age);
+            sqlCommand.Parameters.AddWithValue("@Country", customer.Country);
+            sqlConnection.Open();
+            sqlCommand.ExecuteNonQuery();
+            sqlConnection.Close();       
+        }
+
         public string GetCustomerFullNameById(int customerId)
         {
             string sqlQuery = "SELECT Name FROM Customers WHERE Id = @customerId";
