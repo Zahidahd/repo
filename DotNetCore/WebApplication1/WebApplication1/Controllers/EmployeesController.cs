@@ -8,6 +8,7 @@ using System.Data;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using WebApplication1.DTO.InputDTO;
+using WebApplication1.Repositories;
 
 namespace WebApplication1.Controllers
 {
@@ -16,21 +17,18 @@ namespace WebApplication1.Controllers
     public class EmployeesController : ControllerBase
     {
         public readonly IConfiguration _Configuration;
-        SqlConnection sqlConnection;
 
         public EmployeesController(IConfiguration configuration)
         {
             _Configuration = configuration;
-            sqlConnection = new(_Configuration.GetConnectionString("EmployeesDBConnection").ToString());
         }
 
         [HttpGet]
         [Route("GetAllEmployees")]
         public IActionResult GetAllEmployees()
         {
-            SqlDataAdapter sqlDataAdapter = new("SELECT * FROM Employees", sqlConnection);
-            DataTable dataTable = new();
-            sqlDataAdapter.Fill(dataTable);
+            EmployeeRepository employeeRepository = new(_Configuration);
+            DataTable dataTable = employeeRepository.GetAllEmployees();
 
             if (dataTable.Rows.Count > 0)
             {
@@ -46,12 +44,8 @@ namespace WebApplication1.Controllers
         [Route("GetEmployeesCount")]
         public IActionResult GetEmployeesCount()
         {
-            string sqlQuery = "SELECT COUNT(*) FROM Employees ";
-            SqlCommand sqlCommand = new(sqlQuery, sqlConnection);
-            sqlConnection.Open();
-            int employeeCount = Convert.ToInt32(sqlCommand.ExecuteScalar());
-            sqlConnection.Close();
-
+            EmployeeRepository employeeRepository = new(_Configuration);
+            int employeeCount = employeeRepository.GetEmployeesCount();
             return Ok(employeeCount);
         }
 
@@ -64,10 +58,8 @@ namespace WebApplication1.Controllers
                 return BadRequest("EmployeeId should be greater than 0");
             }
 
-            SqlDataAdapter sqlDataAdapter = new("SELECT * FROM Employees WHERE Id = @employeeId", sqlConnection);
-            sqlDataAdapter.SelectCommand.Parameters.AddWithValue("@employeeId", employeeId);
-            DataTable dataTable = new();
-            sqlDataAdapter.Fill(dataTable);
+            EmployeeRepository employeeRepository = new(_Configuration);
+            DataTable dataTable = employeeRepository.GetEmployeeDetailById(employeeId);
 
             if (dataTable.Rows.Count > 0)
             {
@@ -88,12 +80,8 @@ namespace WebApplication1.Controllers
                 return BadRequest("Please enter salary above 8000");
             }
 
-            SqlDataAdapter sqlDataAdapter = new(@"SELECT * FROM Employees WHERE Gender = @gender 
-                                                  AND Salary > @salary", sqlConnection);
-            sqlDataAdapter.SelectCommand.Parameters.AddWithValue("@gender", gender);
-            sqlDataAdapter.SelectCommand.Parameters.AddWithValue("@salary", salary);
-            DataTable dataTable = new();
-            sqlDataAdapter.Fill(dataTable);
+            EmployeeRepository employeeRepository = new(_Configuration);
+            DataTable dataTable = employeeRepository.GetEmployeesDetailByGenderBySalary(gender, salary);
 
             if (dataTable.Rows.Count > 0)
             {
@@ -105,11 +93,11 @@ namespace WebApplication1.Controllers
             }
         }
 
-        [HttpGet]   
+        [HttpGet]
         [Route("GetEmployeesBySalaryRange/{minimumSalary}/{maximumSalary}")]
         public IActionResult GetEmployeesBySalaryRange(int minimumSalary, int maximumSalary)
         {
-            if(maximumSalary < minimumSalary)
+            if (maximumSalary < minimumSalary)
             {
                 return BadRequest("maximum salary can not be less than minimumSalary");
             }
@@ -121,14 +109,9 @@ namespace WebApplication1.Controllers
             {
                 return BadRequest("Please enter maximum salary less than 500000");
             }
-               SqlDataAdapter sqlDataAdapter = new(@" SELECT * FROM Employees 
-                                                      WHERE Salary BETWEEN @minimumSalary
-                                                      AND @maximumSalary
-                                                      ORDER BY Salary", sqlConnection);
-            sqlDataAdapter.SelectCommand.Parameters.AddWithValue("@minimumSalary", minimumSalary);
-            sqlDataAdapter.SelectCommand.Parameters.AddWithValue("@maximumSalary", maximumSalary);
-            DataTable  dataTable = new();
-            sqlDataAdapter.Fill(dataTable);
+
+            EmployeeRepository employeeRepository = new(_Configuration);
+            DataTable dataTable = employeeRepository.GetEmployeesBySalaryRange(minimumSalary, maximumSalary);
 
             if (dataTable.Rows.Count > 0)
             {
@@ -140,50 +123,39 @@ namespace WebApplication1.Controllers
             }
         }
 
+        [HttpGet]
+        [Route("GetEmployeeFullNameById/{EmployeeId}")]
+        public IActionResult GetEmployeeFullNameById(int employeeId)
+        {
+            if (employeeId < 1)
+            {
+                return BadRequest("Employee Id should not be less than 1");
+            }
+
+            EmployeeRepository employeeRepository = new(_Configuration);
+            string employeeFullName = employeeRepository.GetEmployeeFullNameById(employeeId);
+
+            return Ok(employeeFullName);
+        }
+
         [HttpPost]
         [Route("EmployeeRegister")]
         public IActionResult EmployeeRegister([FromBody] EmployeeDto employee)
         {
             try
             {
-                Regex regex = new Regex(@"^([\w\.\-]+)@([\w\-]+)((\.(\w){2,3})+)$");
-                Match match = regex.Match(employee.Email); 
-                if (!match.Success)
+                string errorMessage = ValidateEmployeeRegisterOrUpdate(employee);
+                if (!string.IsNullOrEmpty(errorMessage))
                 {
-                    return BadRequest("Email is invalid");
+                    return BadRequest(errorMessage);
                 }
-                if (string.IsNullOrWhiteSpace(employee.FullName))
-                {
-                    return BadRequest("Name can not be blank");
-                }
-                employee.FullName = employee.FullName.Trim();
-                employee.Gender = employee.Gender.Trim();
 
-                if (employee.FullName.Length < 3 || employee.FullName.Length > 30)
+                if (ModelState.IsValid)
                 {
-                    return BadRequest("FullName should be between 3 and 30 characters.");
+                    EmployeeRepository employeeRepository= new(_Configuration);
+                    int id = employeeRepository.Add(employee);
+                    return Ok(id);
                 }
-                if (employee.Salary < 8000)
-                {
-                    return BadRequest("Invalid salary, employee salary should be above 8000");
-                }
-                    if (ModelState.IsValid)
-                    {
-                        string sqlQuery = @"INSERT INTO Employees(FullName, Email, Gender, DateOfJoining, Salary)
-                                            VALUES (@FullName, @Email, @Gender, @DateOfJoining, @Salary)
-                                            Select Scope_Identity() ";
-                        SqlCommand sqlCommand = new(sqlQuery, sqlConnection);
-                        sqlCommand.Parameters.AddWithValue("@FullName", employee.FullName);
-                        sqlCommand.Parameters.AddWithValue("@Email", employee.Email);
-                        sqlCommand.Parameters.AddWithValue("@Gender", employee.Gender);
-                        sqlCommand.Parameters.AddWithValue("@DateOfJoining", employee.DateOfJoining);
-                        sqlCommand.Parameters.AddWithValue("@Salary", employee.Salary);
-                        sqlConnection.Open();
-                        employee.Id = Convert.ToInt32(sqlCommand.ExecuteScalar());
-                        sqlConnection.Close();
-
-                        return Ok(employee.Id);
-                    }
                 return BadRequest();
             }
             catch (Exception ex)
@@ -195,23 +167,63 @@ namespace WebApplication1.Controllers
             }
         }
 
-        [HttpGet]
-        [Route("GetEmployeeFullNameById/{EmployeeId}")]
-        public IActionResult GetEmployeeFullNameById(int employeeId)
+        [HttpPost]
+        [Route("EmployeeUpdate")]
+        public IActionResult EmployeeUpdate([FromBody] EmployeeDto employee)
         {
-            if(employeeId < 1)
+            try
             {
-                return BadRequest("Employee Id should not be less than 1");
+                string errorMessage = ValidateEmployeeRegisterOrUpdate(employee);
+                if (!string.IsNullOrEmpty(errorMessage))
+                {
+                    return BadRequest(errorMessage);
+                }
+
+                if (ModelState.IsValid)
+                {
+                    EmployeeRepository employeeRepository = new(_Configuration);
+                    employeeRepository.Update(employee);
+                    return Ok("Record updated");
+                }
+                return BadRequest();
+            }
+            catch (Exception ex)
+            {
+                ModelState.AddModelError("", @"Unable to save changes. 
+                    Try again, and if the problem persists 
+                    see your system administrator.");
+                return StatusCode(StatusCodes.Status500InternalServerError);
+            }
+        }
+
+        private string ValidateEmployeeRegisterOrUpdate(EmployeeDto employee)
+        {
+            string errorMessage = "";
+
+            Regex regex = new Regex(@"^([\w\.\-]+)@([\w\-]+)((\.(\w){2,3})+)$");
+            Match match = regex.Match(employee.Email);
+            if (!match.Success)
+            {
+                errorMessage = "Email is invalid";
+            }
+            if (string.IsNullOrWhiteSpace(employee.FullName))
+            {
+                errorMessage = "Name can not be blank";
             }
 
-            string sqlQuery = "SELECT FullName FROM Employees WHERE Id = @employeeId";
-            SqlCommand sqlCommand = new(sqlQuery, sqlConnection);
-            sqlCommand.Parameters.AddWithValue("@employeeId", employeeId);
-            sqlConnection.Open();
-            string employeeFullName = Convert.ToString(sqlCommand.ExecuteScalar());
-            sqlConnection.Close();
+            employee.FullName = employee.FullName.Trim();
+            employee.Gender = employee.Gender.Trim();
 
-            return Ok(employeeFullName);
+            if (employee.FullName.Length < 3 || employee.FullName.Length > 30)
+            {
+                errorMessage = "FullName should be between 3 and 30 characters.";
+            }
+            if (employee.Salary < 8000)
+            {
+                errorMessage = "Invalid salary, employee salary should be above 8000";
+            }
+
+            return errorMessage;
         }
     }
 }
