@@ -10,6 +10,8 @@ using System.Text.Json.Serialization;
 using Newtonsoft.Json;
 using System.Reflection;
 using WebApplication1.DTO.InputDTO;
+using WebApplication1.Repositories;
+using System.Numerics;
 
 namespace WebApplication1.Controllers
 {
@@ -18,27 +20,22 @@ namespace WebApplication1.Controllers
     public class DoctorsController : ControllerBase
     {
         public readonly IConfiguration _Configuration;
-        SqlConnection sqlConnection;
 
         public DoctorsController(IConfiguration configuration)
         {
             _Configuration = configuration;
-            sqlConnection = new(_Configuration.GetConnectionString("ECommerceDBConnection").ToString());
         }
 
         [HttpGet]
         [Route("GetAllDoctors")]
         public IActionResult GetAllDoctors()
         {
-            SqlDataAdapter sqlDataAdapter = new("SELECT * FROM Doctors", sqlConnection);
-            DataTable dataTable = new();
-            sqlDataAdapter.Fill(dataTable);
-            DataTable copyDataTable = dataTable.Copy();
-            sqlDataAdapter.Fill(copyDataTable);
+            DoctorRepository doctorRepository = new(_Configuration);
+            DataTable dataTable = doctorRepository.GetAllDoctors();
 
-            if(copyDataTable.Rows.Count > 0)
+            if (dataTable.Rows.Count > 0)
             {
-                return Ok(JsonConvert.SerializeObject(copyDataTable));
+                return Ok(JsonConvert.SerializeObject(dataTable));
             }
             else
             {
@@ -50,11 +47,8 @@ namespace WebApplication1.Controllers
         [Route("GetDoctorsCount")]
         public IActionResult GetDoctorsCount()
         {
-            string sqlQuery = "SELECT COUNT(*) FROM Doctors";
-            SqlCommand sqlCommand = new(sqlQuery, sqlConnection);
-            sqlConnection.Open();
-            int doctorCount = Convert.ToInt32(sqlCommand.ExecuteScalar());
-            sqlConnection.Close();
+            DoctorRepository doctorRepository = new(_Configuration);
+            int doctorCount = doctorRepository.GetDoctorsCount();
 
             return Ok(doctorCount);
         }
@@ -68,10 +62,8 @@ namespace WebApplication1.Controllers
                 return BadRequest("Doctor Id should be greater than 0");
             }
 
-            SqlDataAdapter sqlDataAdapter = new("SELECT * FROM Doctors WHERE Id = @doctorId", sqlConnection);
-            sqlDataAdapter.SelectCommand.Parameters.AddWithValue("@doctorId", doctorId);
-            DataTable dataTable = new();
-            sqlDataAdapter.Fill(dataTable);
+            DoctorRepository doctorRepository = new(_Configuration);
+            DataTable dataTable = doctorRepository.GetDoctorDetailById(doctorId);
 
             if (dataTable.Rows.Count > 0)
             {
@@ -87,26 +79,24 @@ namespace WebApplication1.Controllers
         [Route("GetDoctorsByDepartmentByDoctorName/{department}/{doctorName}")]
         public IActionResult GetDoctorsByDepartmentByDoctorName(string department, string doctorName)
         {
+            doctorName = doctorName.Trim();
+            department = department.Trim();
+
             if (string.IsNullOrWhiteSpace(doctorName))
             {
                 return BadRequest("Doctor name cannot be blank");
             }
-            doctorName = doctorName.Trim();
-            if (doctorName.Length < 3 || doctorName.Length > 30)
+            else if (doctorName.Length < 3 || doctorName.Length > 30)
             {
                 return BadRequest("DoctorName should be between 3 and 30 characters.");
             }
-            department = department.Trim();
-            if (department.Length < 3 || department.Length > 30)
+            else if (department.Length < 3 || department.Length > 30)
             {
                 return BadRequest("Department should be between 3 and 30 characters.");
             }
 
-            SqlDataAdapter sqlDataAdapter = new("SELECT * FROM Doctors WHERE Department = @department AND Name = @doctorName ", sqlConnection);
-            sqlDataAdapter.SelectCommand.Parameters.AddWithValue("@department", department);
-            sqlDataAdapter.SelectCommand.Parameters.AddWithValue("@doctorName", doctorName);
-            DataTable dataTable = new();
-            sqlDataAdapter.Fill(dataTable);
+            DoctorRepository doctorRepository = new(_Configuration);
+            DataTable dataTable = doctorRepository.GetDoctorsByDepartmentByDoctorName(department, doctorName);
 
             if (dataTable.Rows.Count > 0)
             {
@@ -126,16 +116,13 @@ namespace WebApplication1.Controllers
             {
                 return BadRequest("Department cannot be blank");
             }
-            if (department.Length < 3 || department.Length > 30)
+            else if (department.Length < 3 || department.Length > 30)
             {
                 return BadRequest("Department should be between 3 and 30 characters.");
             }
 
-            SqlDataAdapter sqlDataAdapter = new("SELECT * FROM Doctors WHERE Department = @department", sqlConnection);
-            sqlDataAdapter.SelectCommand.Parameters.AddWithValue("@department", department);
-
-            DataTable dataTable = new();
-            sqlDataAdapter.Fill(dataTable);
+            DoctorRepository doctorRepository = new(_Configuration);
+            DataTable dataTable = doctorRepository.GetDoctorsNameListByDepartment(department);
 
             if (dataTable.Rows.Count > 0)
             {
@@ -144,57 +131,6 @@ namespace WebApplication1.Controllers
             else
             {
                 return NotFound();
-            }
-        }
-
-        [HttpPost]
-        [Route("DoctorRegister")]
-        public IActionResult DoctorRegister([FromBody] DoctorDto doctor)
-        {
-            try
-            {
-                if (string.IsNullOrWhiteSpace(doctor.FullName))
-                {
-                    return BadRequest("FullName cannot be blank");
-                }
-
-                doctor.FullName = doctor.FullName.Trim();
-                string completeFullName = doctor.FullName.Insert(0, "Mr.");
-                string completeFullName2 = completeFullName.Replace("Mr.", "Janab.");
-                
-                if (completeFullName2.Length < 3 || completeFullName2.Length > 30)
-                {
-                    return BadRequest("FullName should be between 3 and 30 characters");
-                }
-                if (string.IsNullOrWhiteSpace(doctor.Department))
-                {
-                    return BadRequest("Department cannot be blank");
-                }
-                doctor.Department = doctor.Department.Trim();
-
-                if (ModelState.IsValid)
-                {
-                    string sqlQuery = @"INSERT INTO Doctors(Name, Department, City)
-                                        VALUES(@FullName, @Department, @City)
-                                        Select Scope_Identity()";
-                    SqlCommand sqlCommand = new(sqlQuery, sqlConnection);
-                    sqlCommand.Parameters.AddWithValue("@FullName", completeFullName2);
-                    sqlCommand.Parameters.AddWithValue("@Department", doctor.Department);
-                    sqlCommand.Parameters.AddWithValue("@City", doctor.City);
-                    sqlConnection.Open();
-                    doctor.Id = Convert.ToInt32(sqlCommand.ExecuteScalar());
-                    sqlConnection.Close();
-
-                    return Ok(doctor.Id);
-                }
-                return BadRequest();
-            }
-            catch (Exception ex)
-            {
-                ModelState.AddModelError("", @"Unable to save changes. 
-                                               Try again, and if the problem persists 
-                                               see your system administrator.");
-                return StatusCode(StatusCodes.Status500InternalServerError);
             }
         }
 
@@ -207,15 +143,101 @@ namespace WebApplication1.Controllers
                 return BadRequest("Doctor Id cannot be less than 1");
             }
 
-            string sqlQuery = "SELECT Name FROM Doctors WHERE Id = @doctorId";
-            SqlCommand sqlCommand = new(sqlQuery, sqlConnection);
-            sqlCommand.Parameters.AddWithValue("@doctorId", doctorId);
-            sqlConnection.Open();
-            string doctorFullName = Convert.ToString(sqlCommand.ExecuteScalar());
-            string subStringDoctorFullName = doctorFullName.Substring(3);
-            sqlConnection.Close();
+            DoctorRepository doctorRepository = new(_Configuration);
+            string subStringDoctorFullName = doctorRepository.GetDoctorFullNameByDoctorId(doctorId);
 
             return Ok(subStringDoctorFullName);
+        }
+
+        [HttpPost]
+        [Route("DoctorRegister")]
+        public IActionResult DoctorRegister([FromBody] DoctorDto doctor)
+        {
+            try
+            {
+                string errorMessage = validateDoctorRegisterOrUpdate(doctor);
+                if (!string.IsNullOrEmpty(errorMessage))
+                {
+                    return BadRequest(errorMessage);
+                }
+
+                if (ModelState.IsValid)
+                {
+                    DoctorRepository doctorRepository = new(_Configuration);
+                    int doctorId = doctorRepository.Add(doctor);
+
+                    return Ok(doctorId);
+                }
+                return BadRequest();
+            }
+            catch (Exception ex)
+            {
+                ModelState.AddModelError("", @"Unable to save changes. 
+                                               Try again, and if the problem persists 
+                                               see your system administrator.");
+                return StatusCode(StatusCodes.Status500InternalServerError);
+            }
+        }
+
+        [HttpPost]
+        [Route("DoctorUpdate")]
+        public IActionResult DoctorUpdate([FromBody] DoctorDto doctor)
+        {
+            try
+            {
+                string errorMessage = validateDoctorRegisterOrUpdate(doctor, true);
+                if (!string.IsNullOrEmpty(errorMessage))
+                {
+                    return BadRequest(errorMessage);
+                }
+
+                if (ModelState.IsValid)
+                {
+                    DoctorRepository doctorRepository = new(_Configuration);
+                    doctorRepository.Update(doctor);
+
+                    return Ok("Record updated");
+                }
+                return BadRequest();
+            }
+            catch (Exception ex)
+            {
+                ModelState.AddModelError("", @"Unable to save changes. 
+                                               Try again, and if the problem persists 
+                                               see your system administrator.");
+                return StatusCode(StatusCodes.Status500InternalServerError);
+            }
+        }
+
+        private string validateDoctorRegisterOrUpdate(DoctorDto doctor, bool isUpdate = false)
+        {
+            string errorMessage = "";
+
+            doctor.FullName = doctor.FullName.Trim();
+            doctor.Department = doctor.Department.Trim();
+
+            if (isUpdate == true)
+            {
+                if (doctor.Id < 1)
+                {
+                    errorMessage = "Id can not be less than 0";
+                }
+            }
+
+            if (string.IsNullOrWhiteSpace(doctor.FullName))
+            {
+                errorMessage = "FullName cannot be blank";
+            }
+            else if (doctor.FullName.Length < 3 || doctor.FullName.Length > 30)
+            {
+                errorMessage = "FullName should be between 3 and 30 characters";
+            }
+            else if (string.IsNullOrWhiteSpace(doctor.Department))
+            {
+                errorMessage = "Department cannot be blank";
+            }
+
+            return errorMessage;
         }
     }
 }

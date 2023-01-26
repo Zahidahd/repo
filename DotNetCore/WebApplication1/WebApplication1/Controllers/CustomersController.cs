@@ -128,7 +128,7 @@ namespace WebApplication1.Controllers
             }
         }
 
-        private string validateCustomerRegisterOrUpdate(CustomerDto customer)
+        private string validateCustomerRegisterOrUpdate(CustomerDto customer, bool isUpdate = false)
         {
             string errorMessage = "";
             
@@ -136,8 +136,15 @@ namespace WebApplication1.Controllers
             customer.Gender = customer.Gender.Trim();
             customer.Country = customer.Country.Trim();
 
-
-            if(string.IsNullOrWhiteSpace(customer.FullName))
+            if(isUpdate == true)
+            {
+                if (customer.Id < 1)
+                {
+                    errorMessage = "Id can not be less than 0";
+                }
+            }
+            
+            if (string.IsNullOrWhiteSpace(customer.FullName))
             {
                 errorMessage = "FullName can not be blank";
             }
@@ -181,12 +188,7 @@ namespace WebApplication1.Controllers
         {
             try
             {
-                if (customer.Id < 1)
-                {
-                    return BadRequest("Id can not be less than 0");
-                }
-
-                string errorMessage = validateCustomerRegisterOrUpdate(customer);
+                string errorMessage = validateCustomerRegisterOrUpdate(customer, true);
                 if (!string.IsNullOrEmpty(errorMessage))
                 {
                     return BadRequest(errorMessage);

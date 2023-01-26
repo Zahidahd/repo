@@ -152,7 +152,7 @@ namespace WebApplication1.Controllers
 
                 if (ModelState.IsValid)
                 {
-                    EmployeeRepository employeeRepository= new(_Configuration);
+                    EmployeeRepository employeeRepository = new(_Configuration);
                     int id = employeeRepository.Add(employee);
                     return Ok(id);
                 }
@@ -173,7 +173,7 @@ namespace WebApplication1.Controllers
         {
             try
             {
-                string errorMessage = ValidateEmployeeRegisterOrUpdate(employee);
+                string errorMessage = ValidateEmployeeRegisterOrUpdate(employee, true);
                 if (!string.IsNullOrEmpty(errorMessage))
                 {
                     return BadRequest(errorMessage);
@@ -196,29 +196,51 @@ namespace WebApplication1.Controllers
             }
         }
 
-        private string ValidateEmployeeRegisterOrUpdate(EmployeeDto employee)
+        private string ValidateEmployeeRegisterOrUpdate(EmployeeDto employee, bool isUpdate = false)
         {
             string errorMessage = "";
 
+            employee.FullName = employee.FullName.Trim();
+            employee.Gender = employee.Gender.Trim();
             Regex regex = new Regex(@"^([\w\.\-]+)@([\w\-]+)((\.(\w){2,3})+)$");
             Match match = regex.Match(employee.Email);
+
+            // Approach 1
+            if(isUpdate == true)
+            {
+                if (employee.Id < 1)
+                {
+                    errorMessage = "Id can not be less than 0";
+                }
+            }
+            // Approach 2
+            //if (isUpdate != false)
+            //{
+            //    if (employee.Id < 1)
+            //    {
+            //        errorMessage = "Id can not be less than 0";
+            //    }
+            //}
+
+            // Approach 3
+            //if (isUpdate == true &&  employee.Id < 1)
+            //{
+            //    errorMessage = "Id can not be less than 0";
+            //}
+
             if (!match.Success)
             {
                 errorMessage = "Email is invalid";
             }
-            if (string.IsNullOrWhiteSpace(employee.FullName))
+            else if (string.IsNullOrWhiteSpace(employee.FullName))
             {
                 errorMessage = "Name can not be blank";
             }
-
-            employee.FullName = employee.FullName.Trim();
-            employee.Gender = employee.Gender.Trim();
-
-            if (employee.FullName.Length < 3 || employee.FullName.Length > 30)
+            else if(employee.FullName.Length < 3 || employee.FullName.Length > 30)
             {
                 errorMessage = "FullName should be between 3 and 30 characters.";
             }
-            if (employee.Salary < 8000)
+            else if (employee.Salary < 8000)
             {
                 errorMessage = "Invalid salary, employee salary should be above 8000";
             }
