@@ -21,7 +21,7 @@ builder.Services.AddTransient<IEmployeeRepository>((svc) =>
     string sqlConnectionString = configuration.GetConnectionString("EmployeesDBConnection");
     return new EmployeeRepository(sqlConnectionString);
 });
-//-------------------------------------------
+//------------------------------------------
 
 builder.Services.AddControllers();
 
