@@ -16,36 +16,30 @@ namespace WebApplication1.Controllers
     [ApiController]
     public class EmployeesController : ControllerBase
     {
-        public readonly IConfiguration _Configuration;
+        public readonly IEmployeeRepository _employeeRepository;
 
-        public EmployeesController(IConfiguration configuration)
+        public EmployeesController(IEmployeeRepository employeeRepository)
         {
-            _Configuration = configuration;
+            _employeeRepository = employeeRepository;
         }
 
         [HttpGet]
         [Route("GetAllEmployees")]
         public IActionResult GetAllEmployees()
         {
-            EmployeeRepository employeeRepository = new(_Configuration);
-            DataTable dataTable = employeeRepository.GetAllEmployees();
+            DataTable dataTable = _employeeRepository.GetAllEmployees();
 
             if (dataTable.Rows.Count > 0)
-            {
                 return Ok(JsonConvert.SerializeObject(dataTable));
-            }
             else
-            {
                 return NotFound();
-            }
         }
 
         [HttpGet]
         [Route("GetEmployeesCount")]
         public IActionResult GetEmployeesCount()
         {
-            EmployeeRepository employeeRepository = new(_Configuration);
-            int employeeCount = employeeRepository.GetEmployeesCount();
+            int employeeCount = _employeeRepository.GetEmployeesCount();
             return Ok(employeeCount);
         }
 
@@ -54,21 +48,14 @@ namespace WebApplication1.Controllers
         public IActionResult GetEmployeeDetailById(int employeeId)
         {
             if (employeeId < 1)
-            {
                 return BadRequest("EmployeeId should be greater than 0");
-            }
 
-            EmployeeRepository employeeRepository = new(_Configuration);
-            DataTable dataTable = employeeRepository.GetEmployeeDetailById(employeeId);
+            DataTable dataTable = _employeeRepository.GetEmployeeDetailById(employeeId);
 
             if (dataTable.Rows.Count > 0)
-            {
                 return Ok(JsonConvert.SerializeObject(dataTable));
-            }
             else
-            {
                 return NotFound();
-            }
         }
 
         [HttpGet]
@@ -76,21 +63,14 @@ namespace WebApplication1.Controllers
         public IActionResult GetEmployeesDetailByGenderBySalary(string gender, int salary)
         {
             if (salary < 8000)
-            {
                 return BadRequest("Please enter salary above 8000");
-            }
 
-            EmployeeRepository employeeRepository = new(_Configuration);
-            DataTable dataTable = employeeRepository.GetEmployeesDetailByGenderBySalary(gender, salary);
+            DataTable dataTable = _employeeRepository.GetEmployeesDetailByGenderBySalary(gender, salary);
 
             if (dataTable.Rows.Count > 0)
-            {
                 return Ok(JsonConvert.SerializeObject(dataTable));
-            }
             else
-            {
                 return NotFound();
-            }
         }
 
         [HttpGet]
@@ -98,29 +78,20 @@ namespace WebApplication1.Controllers
         public IActionResult GetEmployeesBySalaryRange(int minimumSalary, int maximumSalary)
         {
             if (maximumSalary < minimumSalary)
-            {
                 return BadRequest("maximum salary can not be less than minimumSalary");
-            }
-            if (minimumSalary < 8000)
-            {
-                return BadRequest("Please enter minimum salary above 8000");
-            }
-            if (maximumSalary > 500000)
-            {
-                return BadRequest("Please enter maximum salary less than 500000");
-            }
 
-            EmployeeRepository employeeRepository = new(_Configuration);
-            DataTable dataTable = employeeRepository.GetEmployeesBySalaryRange(minimumSalary, maximumSalary);
+            else if (minimumSalary < 8000)
+                return BadRequest("Please enter minimum salary above 8000");
+
+            else if (maximumSalary > 500000)
+                return BadRequest("Please enter maximum salary less than 500000");
+
+            DataTable dataTable = _employeeRepository.GetEmployeesBySalaryRange(minimumSalary, maximumSalary);
 
             if (dataTable.Rows.Count > 0)
-            {
                 return Ok(JsonConvert.SerializeObject(dataTable));
-            }
             else
-            {
                 return NotFound();
-            }
         }
 
         [HttpGet]
@@ -128,12 +99,9 @@ namespace WebApplication1.Controllers
         public IActionResult GetEmployeeFullNameById(int employeeId)
         {
             if (employeeId < 1)
-            {
                 return BadRequest("Employee Id should not be less than 1");
-            }
 
-            EmployeeRepository employeeRepository = new(_Configuration);
-            string employeeFullName = employeeRepository.GetEmployeeFullNameById(employeeId);
+            string employeeFullName = _employeeRepository.GetEmployeeFullNameById(employeeId);
 
             return Ok(employeeFullName);
         }
@@ -146,14 +114,11 @@ namespace WebApplication1.Controllers
             {
                 string errorMessage = ValidateEmployeeRegisterOrUpdate(employee);
                 if (!string.IsNullOrEmpty(errorMessage))
-                {
                     return BadRequest(errorMessage);
-                }
 
                 if (ModelState.IsValid)
                 {
-                    EmployeeRepository employeeRepository = new(_Configuration);
-                    int id = employeeRepository.Add(employee);
+                    int id = _employeeRepository.Add(employee);
                     return Ok(id);
                 }
                 return BadRequest();
@@ -175,14 +140,11 @@ namespace WebApplication1.Controllers
             {
                 string errorMessage = ValidateEmployeeRegisterOrUpdate(employee, true);
                 if (!string.IsNullOrEmpty(errorMessage))
-                {
                     return BadRequest(errorMessage);
-                }
 
                 if (ModelState.IsValid)
                 {
-                    EmployeeRepository employeeRepository = new(_Configuration);
-                    employeeRepository.Update(employee);
+                    _employeeRepository.Update(employee);
                     return Ok("Record updated");
                 }
                 return BadRequest();
@@ -206,12 +168,10 @@ namespace WebApplication1.Controllers
             Match match = regex.Match(employee.Email);
 
             // Approach 1
-            if(isUpdate == true)
+            if (isUpdate == true)
             {
                 if (employee.Id < 1)
-                {
                     errorMessage = "Id can not be less than 0";
-                }
             }
             // Approach 2
             //if (isUpdate != false)
@@ -229,21 +189,16 @@ namespace WebApplication1.Controllers
             //}
 
             if (!match.Success)
-            {
                 errorMessage = "Email is invalid";
-            }
+
             else if (string.IsNullOrWhiteSpace(employee.FullName))
-            {
                 errorMessage = "Name can not be blank";
-            }
-            else if(employee.FullName.Length < 3 || employee.FullName.Length > 30)
-            {
+
+            else if (employee.FullName.Length < 3 || employee.FullName.Length > 30)
                 errorMessage = "FullName should be between 3 and 30 characters.";
-            }
+
             else if (employee.Salary < 8000)
-            {
                 errorMessage = "Invalid salary, employee salary should be above 8000";
-            }
 
             return errorMessage;
         }
