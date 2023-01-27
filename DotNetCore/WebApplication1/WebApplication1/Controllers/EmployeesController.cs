@@ -174,6 +174,7 @@ namespace WebApplication1.Controllers
                     errorMessage = "Id can not be less than 0";
             }
             // Approach 2
+
             //if (isUpdate != false)
             //{
             //    if (employee.Id < 1)
