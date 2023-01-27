@@ -19,37 +19,30 @@ namespace WebApplication1.Controllers
     [ApiController]
     public class DoctorsController : ControllerBase
     {
-        public readonly IConfiguration _Configuration;
+        IDoctorRepository _doctorRepository;
 
-        public DoctorsController(IConfiguration configuration)
+        public DoctorsController(IDoctorRepository doctorRepository)
         {
-            _Configuration = configuration;
+            _doctorRepository = doctorRepository;
         }
 
         [HttpGet]
         [Route("GetAllDoctors")]
         public IActionResult GetAllDoctors()
         {
-            DoctorRepository doctorRepository = new(_Configuration);
-            DataTable dataTable = doctorRepository.GetAllDoctors();
+            DataTable dataTable = _doctorRepository.GetAllDoctors();
 
             if (dataTable.Rows.Count > 0)
-            {
                 return Ok(JsonConvert.SerializeObject(dataTable));
-            }
             else
-            {
                 return NotFound();
-            }
         }
 
         [HttpGet]
         [Route("GetDoctorsCount")]
         public IActionResult GetDoctorsCount()
         {
-            DoctorRepository doctorRepository = new(_Configuration);
-            int doctorCount = doctorRepository.GetDoctorsCount();
-
+            int doctorCount = _doctorRepository.GetDoctorsCount();
             return Ok(doctorCount);
         }
 
@@ -58,21 +51,14 @@ namespace WebApplication1.Controllers
         public IActionResult GetDoctorDetailById(int doctorId)
         {
             if (doctorId < 1)
-            {
                 return BadRequest("Doctor Id should be greater than 0");
-            }
 
-            DoctorRepository doctorRepository = new(_Configuration);
-            DataTable dataTable = doctorRepository.GetDoctorDetailById(doctorId);
+            DataTable dataTable = _doctorRepository.GetDoctorDetailById(doctorId);
 
             if (dataTable.Rows.Count > 0)
-            {
                 return Ok(JsonConvert.SerializeObject(dataTable));
-            }
             else
-            {
                 return NotFound();
-            }
         }
 
         [HttpGet]
@@ -83,29 +69,20 @@ namespace WebApplication1.Controllers
             department = department.Trim();
 
             if (string.IsNullOrWhiteSpace(doctorName))
-            {
                 return BadRequest("Doctor name cannot be blank");
-            }
-            else if (doctorName.Length < 3 || doctorName.Length > 30)
-            {
-                return BadRequest("DoctorName should be between 3 and 30 characters.");
-            }
-            else if (department.Length < 3 || department.Length > 30)
-            {
-                return BadRequest("Department should be between 3 and 30 characters.");
-            }
 
-            DoctorRepository doctorRepository = new(_Configuration);
-            DataTable dataTable = doctorRepository.GetDoctorsByDepartmentByDoctorName(department, doctorName);
+            else if (doctorName.Length < 3 || doctorName.Length > 30)
+                return BadRequest("DoctorName should be between 3 and 30 characters.");
+
+            else if (department.Length < 3 || department.Length > 30)
+                return BadRequest("Department should be between 3 and 30 characters.");
+
+            DataTable dataTable = _doctorRepository.GetDoctorsByDepartmentByDoctorName(department, doctorName);
 
             if (dataTable.Rows.Count > 0)
-            {
                 return Ok(JsonConvert.SerializeObject(dataTable));
-            }
             else
-            {
                 return NotFound();
-            }
         }
 
         [HttpGet]
@@ -113,25 +90,17 @@ namespace WebApplication1.Controllers
         public IActionResult GetDoctorsNameListByDepartment(string department)
         {
             if (string.IsNullOrWhiteSpace(department))
-            {
                 return BadRequest("Department cannot be blank");
-            }
-            else if (department.Length < 3 || department.Length > 30)
-            {
-                return BadRequest("Department should be between 3 and 30 characters.");
-            }
 
-            DoctorRepository doctorRepository = new(_Configuration);
-            DataTable dataTable = doctorRepository.GetDoctorsNameListByDepartment(department);
+            else if (department.Length < 3 || department.Length > 30)
+                return BadRequest("Department should be between 3 and 30 characters.");
+
+            DataTable dataTable = _doctorRepository.GetDoctorsNameListByDepartment(department);
 
             if (dataTable.Rows.Count > 0)
-            {
                 return Ok(JsonConvert.SerializeObject(dataTable));
-            }
             else
-            {
                 return NotFound();
-            }
         }
 
         [HttpGet]
@@ -139,13 +108,9 @@ namespace WebApplication1.Controllers
         public IActionResult GetDoctorFullNameByDoctorId(int doctorId)
         {
             if (doctorId < 1)
-            {
                 return BadRequest("Doctor Id cannot be less than 1");
-            }
 
-            DoctorRepository doctorRepository = new(_Configuration);
-            string subStringDoctorFullName = doctorRepository.GetDoctorFullNameByDoctorId(doctorId);
-
+            string subStringDoctorFullName = _doctorRepository.GetDoctorFullNameByDoctorId(doctorId);
             return Ok(subStringDoctorFullName);
         }
 
@@ -157,15 +122,11 @@ namespace WebApplication1.Controllers
             {
                 string errorMessage = validateDoctorRegisterOrUpdate(doctor);
                 if (!string.IsNullOrEmpty(errorMessage))
-                {
                     return BadRequest(errorMessage);
-                }
 
                 if (ModelState.IsValid)
                 {
-                    DoctorRepository doctorRepository = new(_Configuration);
-                    int doctorId = doctorRepository.Add(doctor);
-
+                    int doctorId = _doctorRepository.Add(doctor);
                     return Ok(doctorId);
                 }
                 return BadRequest();
@@ -187,15 +148,11 @@ namespace WebApplication1.Controllers
             {
                 string errorMessage = validateDoctorRegisterOrUpdate(doctor, true);
                 if (!string.IsNullOrEmpty(errorMessage))
-                {
                     return BadRequest(errorMessage);
-                }
 
                 if (ModelState.IsValid)
                 {
-                    DoctorRepository doctorRepository = new(_Configuration);
-                    doctorRepository.Update(doctor);
-
+                    _doctorRepository.Update(doctor);
                     return Ok("Record updated");
                 }
                 return BadRequest();
@@ -219,23 +176,17 @@ namespace WebApplication1.Controllers
             if (isUpdate == true)
             {
                 if (doctor.Id < 1)
-                {
                     errorMessage = "Id can not be less than 0";
-                }
             }
 
             if (string.IsNullOrWhiteSpace(doctor.FullName))
-            {
                 errorMessage = "FullName cannot be blank";
-            }
+
             else if (doctor.FullName.Length < 3 || doctor.FullName.Length > 30)
-            {
                 errorMessage = "FullName should be between 3 and 30 characters";
-            }
+
             else if (string.IsNullOrWhiteSpace(doctor.Department))
-            {
                 errorMessage = "Department cannot be blank";
-            }
 
             return errorMessage;
         }

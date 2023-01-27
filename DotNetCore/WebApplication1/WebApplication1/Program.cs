@@ -12,7 +12,7 @@ IConfigurationRoot? configuration = new ConfigurationBuilder()
 
 builder.Services.AddTransient<ICustomerRepository>((svc) =>
 {
-    string sqlConnectionString = configuration.GetConnectionString("CustomersDBConnection");
+    string sqlConnectionString = configuration.GetConnectionString("ECommerceDBConnection");
     return new CustomerRepository(sqlConnectionString);
 });
 
@@ -20,6 +20,12 @@ builder.Services.AddTransient<IEmployeeRepository>((svc) =>
 {
     string sqlConnectionString = configuration.GetConnectionString("EmployeesDBConnection");
     return new EmployeeRepository(sqlConnectionString);
+});
+
+builder.Services.AddTransient<IDoctorRepository>((svc) =>
+{
+    string sqlConnectionString = configuration.GetConnectionString("ECommerceDBConnection");
+    return new DoctorRepository(sqlConnectionString);
 });
 //------------------------------------------
 
