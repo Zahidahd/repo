@@ -10,10 +10,16 @@ IConfigurationRoot? configuration = new ConfigurationBuilder()
         .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
         .Build();
 
-builder.Services.AddTransient<ICustomerRepository>((svc) =>
+string ECommerceDBConnectionString = configuration.GetConnectionString("ECommerceDBConnection");
+
+builder.Services.AddTransient<ICustomerRepository> ((svc) =>
 {
-    string sqlConnectionString = configuration.GetConnectionString("ECommerceDBConnection");
-    return new CustomerRepository(sqlConnectionString);
+    return new CustomerRepository(ECommerceDBConnectionString);
+});
+
+builder.Services.AddTransient<IDoctorRepository>((svc) =>
+{
+    return new DoctorRepository(ECommerceDBConnectionString);
 });
 
 builder.Services.AddTransient<IEmployeeRepository>((svc) =>
@@ -22,11 +28,12 @@ builder.Services.AddTransient<IEmployeeRepository>((svc) =>
     return new EmployeeRepository(sqlConnectionString);
 });
 
-builder.Services.AddTransient<IDoctorRepository>((svc) =>
+builder.Services.AddTransient<ITeacherRepository>((svc) =>
 {
-    string sqlConnectionString = configuration.GetConnectionString("ECommerceDBConnection");
-    return new DoctorRepository(sqlConnectionString);
+    string sqlConnectionString = configuration.GetConnectionString("TeachersDBConnection");
+    return new TeacherRepository(sqlConnectionString);
 });
+
 //------------------------------------------
 
 builder.Services.AddControllers();

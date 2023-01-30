@@ -11,6 +11,7 @@ using Newtonsoft.Json;
 using WebApplication1.DTO.InputDTO;
 using System.Diagnostics.Metrics;
 using System.Reflection;
+using WebApplication1.Repositories;
 
 namespace WebApplication1.Controllers
 {
@@ -18,43 +19,30 @@ namespace WebApplication1.Controllers
     [ApiController]
     public class TeachersController : ControllerBase
     {
-        public readonly IConfiguration _Configuration;
-        SqlConnection sqlConnection;
+        ITeacherRepository _teacherRepository;
 
-        public TeachersController(IConfiguration configuration)
+        public TeachersController(ITeacherRepository teacherRepository)
         {
-            _Configuration = configuration;
-            sqlConnection = new(_Configuration.GetConnectionString("PracticeDBConnection").ToString());
+            _teacherRepository = teacherRepository;
         }
 
         [HttpGet]
         [Route("GetAllTeachers")]
         public IActionResult GetTeachers()
         {
-            SqlDataAdapter sqlDataAdapter = new("SELECT * FROM Teachers", sqlConnection);
-            DataTable dataTable = new();
-            sqlDataAdapter.Fill(dataTable);
+            DataTable dataTable = _teacherRepository.GetAllTeachers();
 
             if (dataTable.Rows.Count > 0)
-            {
                 return Ok(JsonConvert.SerializeObject(dataTable));
-            }
             else
-            {
                 return NotFound();
-            }
         }
 
         [HttpGet]
         [Route("GetTeachersCount")]
         public IActionResult GetTeachersCount()
         {
-            string sqlQuery = "SELECT COUNT(*) FROM Teachers";
-            SqlCommand sqlCommand = new(sqlQuery, sqlConnection);
-            sqlConnection.Open();
-            int customerCount = Convert.ToInt32(sqlCommand.ExecuteScalar());
-            sqlConnection.Close();
-
+            int customerCount = _teacherRepository.GetTeachersCount();
             return Ok(customerCount);
         }
 
@@ -63,23 +51,14 @@ namespace WebApplication1.Controllers
         public IActionResult GetTeacherDetailById(int teacherId)
         {
             if (teacherId < 1)
-            {
                 return BadRequest("TeacherId should be greater than 0");
-            }
 
-            SqlDataAdapter sqlDataAdapter = new("SELECT * FROM Teachers WHERE Id = @teacherId", sqlConnection);
-            sqlDataAdapter.SelectCommand.Parameters.AddWithValue("@teacherId", teacherId);
-            DataTable dataTable = new();
-            sqlDataAdapter.Fill(dataTable);
+            DataTable dataTable = _teacherRepository.GetTeacherDetailById(teacherId);
 
             if (dataTable.Rows.Count > 0)
-            {
                 return Ok(JsonConvert.SerializeObject(dataTable));
-            }
             else
-            {
                 return NotFound();
-            }
         }
 
         [HttpGet]
@@ -87,37 +66,23 @@ namespace WebApplication1.Controllers
         public IActionResult GetTeachersByDepartmentByTeacherName(string department, string teacherName)
         {
             if (string.IsNullOrWhiteSpace(teacherName))
-            {
                 return BadRequest("TeacherName can not be blank");
-            }
-            if (teacherName.Length < 3 || teacherName.Length > 30)
-            {
-                return BadRequest("TeacherName should be between 3 and 30 characters.");
-            }
-            if (string.IsNullOrWhiteSpace(department))
-            {
-                return BadRequest("Department can not be blank");
-            }
-            if (department.Length < 3 || department.Length > 30)
-            {
-                return BadRequest("Department should be between 3 and 30 characters.");
-            }
 
-            SqlDataAdapter sqlDataAdapter = new(@"SELECT * FROM Teachers WHERE FullName = @teacherName
-                                                  AND Department = @department", sqlConnection);
-            sqlDataAdapter.SelectCommand.Parameters.AddWithValue("@teacherName", teacherName);
-            sqlDataAdapter.SelectCommand.Parameters.AddWithValue("@department", department);
-            DataTable dataTable = new();
-            sqlDataAdapter.Fill(dataTable);
+            else if (teacherName.Length < 3 || teacherName.Length > 30)
+                return BadRequest("TeacherName should be between 3 and 30 characters.");
+
+            else if (string.IsNullOrWhiteSpace(department))
+                return BadRequest("Department can not be blank");
+
+            else if (department.Length < 3 || department.Length > 30)
+                return BadRequest("Department should be between 3 and 30 characters.");
+
+            DataTable dataTable = _teacherRepository.GetTeachersByDepartmentByTeacherName(department, teacherName);
 
             if (dataTable.Rows.Count > 0)
-            {
                 return Ok(JsonConvert.SerializeObject(dataTable));
-            }
             else
-            {
                 return NotFound();
-            }
         }
 
         [HttpGet]
@@ -125,70 +90,42 @@ namespace WebApplication1.Controllers
         public IActionResult GetTeacherBySalaryRange(int minimumSalary, int maximumSalary)
         {
             if (maximumSalary < minimumSalary)
-            {
                 return BadRequest("Maximum salary cannot be less than minimum salary");
-            }
 
-            SqlDataAdapter sqlDataAdapter = new(@" SELECT * FROM Teachers 
-                                                   WHERE Salary BETWEEN @minimumSalary AND @maximumSalary
-                                                   ORDER BY Salary", sqlConnection);
-            sqlDataAdapter.SelectCommand.Parameters.AddWithValue("@minimumSalary", minimumSalary);
-            sqlDataAdapter.SelectCommand.Parameters.AddWithValue("@maximumSalary", maximumSalary);
-            DataTable dataTable = new();
-            sqlDataAdapter.Fill(dataTable);
+            DataTable dataTable = _teacherRepository.GetTeacherBySalaryRange(minimumSalary, maximumSalary);
 
             if (dataTable.Rows.Count > 0)
-            {
                 return Ok(JsonConvert.SerializeObject(dataTable));
-            }
             else
-            {
                 return NotFound();
-            }
         }
-        
+
+        [HttpGet]
+        [Route("GetTeacherFullNameById/{TeacherId}")]
+        public IActionResult GetTeacherFullNameById(int teacherId)
+        {
+            if (teacherId < 1)
+                return BadRequest("TeacherId should be greater than 0");
+
+            string teacherFullName = _teacherRepository.GetTeacherFullNameById(teacherId);
+            return Ok(teacherFullName);
+        }
+
+
         [HttpPost]
         [Route("TeacherRegister")]
-        public IActionResult TeacherRegister([FromBody] TeacherDto teacherDto)
+        public IActionResult TeacherRegister([FromBody] TeacherDto teacher)
         {
             try
             {
-                if (string.IsNullOrWhiteSpace(teacherDto.FullName))
-                {
-                    return BadRequest("Name can not be blank");
-                }
-                teacherDto.FullName = teacherDto.FullName.Trim();
-                if (teacherDto.FullName.Length < 3 || teacherDto.FullName.Length > 30)
-                {
-                    return BadRequest("Name should be between 3 and 30 characters.");
-                }
-                if (teacherDto.Age <= 25)
-                {
-                    return BadRequest("Invalid age, teacher age should be above 25");
-                }
-                if (teacherDto.Salary < 25000)
-                {
-                    return BadRequest("Invalid salary, teacher salary should be above 25000");
-                }
+                string errorMessage = validateTeacherRegisterOrUpdate(teacher);
+                if (!string.IsNullOrEmpty(errorMessage))
+                    return BadRequest(errorMessage);
 
                 if (ModelState.IsValid)
                 {
-                    string sqlQuery = @" INSERT INTO Teachers(FullName, Age, Gender, SchoolName,
-                                          Department, Salary)
-                                          VALUES (@FullName, @Age, @Gender, @SchoolName, @Department, @Salary)
-                                          Select Scope_Identity() ";
-                    SqlCommand sqlCommand = new(sqlQuery, sqlConnection);
-                    sqlCommand.Parameters.AddWithValue("@FullName", teacherDto.FullName);
-                    sqlCommand.Parameters.AddWithValue("@Age", teacherDto.Age);
-                    sqlCommand.Parameters.AddWithValue("@Gender", teacherDto.Gender);
-                    sqlCommand.Parameters.AddWithValue("@SchoolName", teacherDto.SchoolName);
-                    sqlCommand.Parameters.AddWithValue("@Department", teacherDto.Department);
-                    sqlCommand.Parameters.AddWithValue("@Salary", teacherDto.Salary);
-                    sqlConnection.Open();
-                    teacherDto.Id = Convert.ToInt32(sqlCommand.ExecuteScalar());
-                    sqlConnection.Close();
-
-                    return Ok(teacherDto.Id);
+                    int id = _teacherRepository.Add(teacher);
+                    return Ok(id);
                 }
                 return BadRequest();
             }
@@ -201,23 +138,66 @@ namespace WebApplication1.Controllers
             }
         }
 
-        [HttpGet]
-        [Route("GetTeacherFullNameById/{TeacherId}")]
-        public IActionResult GetTeacherFullNameById(int teacherId)
+        [HttpPost]
+        [Route("TeacherUpdate")]
+        public IActionResult TeacherUpdate([FromBody] TeacherDto teacher)
         {
-            if (teacherId < 1)
+            try
             {
-                return BadRequest("TeacherId should be greater than 0");
+                string errorMessage = validateTeacherRegisterOrUpdate(teacher, true);
+                if (!string.IsNullOrEmpty(errorMessage))
+                    return BadRequest(errorMessage);
+
+                if (ModelState.IsValid)
+                {
+                    _teacherRepository.Update(teacher);
+                    return Ok("Record updated");
+                }
+                return BadRequest("Record not updated");
+            }
+            catch (Exception ex)
+            {
+                ModelState.AddModelError("", @"Unable to save changes. 
+                    Try again, and if the problem persists 
+                    see your system administrator.");
+                return StatusCode(StatusCodes.Status500InternalServerError);
+            }
+        }
+
+        private string validateTeacherRegisterOrUpdate(TeacherDto teacher, bool isUpdate = false)
+        {
+            string errorMessage = "";
+
+            teacher.FullName = teacher.FullName.Trim();
+            teacher.Gender = teacher.Gender.Trim();
+            teacher.SchoolName = teacher.SchoolName.Trim();
+            teacher.Department = teacher.Department.Trim();
+
+            if (isUpdate == true)
+            {
+                if (teacher.Id < 1)
+                    errorMessage = "Id can not be less than 0";
             }
 
-            string sqlQuery = "SELECT FullName FROM Teachers WHERE Id = @teacherId";
-            SqlCommand sqlCommand = new(sqlQuery, sqlConnection);
-            sqlCommand.Parameters.AddWithValue("@teacherId", teacherId);
-            sqlConnection.Open();
-            string teacherFullName = Convert.ToString(sqlCommand.ExecuteScalar());
-            sqlConnection.Close();
+            if (string.IsNullOrWhiteSpace(teacher.FullName))
+                errorMessage = "FullName can not be blank";
 
-            return Ok(teacherFullName);
+            else if (teacher.FullName.Length < 3 || teacher.FullName.Length > 30)
+                errorMessage = "FullName should be between 3 and 30 characters.";
+
+            else if (teacher.Age <= 18)
+                errorMessage = "Invalid age, customer age should be above 18";
+
+            else if (string.IsNullOrWhiteSpace(teacher.Department))
+                errorMessage = "Department can not be blank";
+
+            else if (string.IsNullOrWhiteSpace(teacher.SchoolName))
+                errorMessage = "SchoolName can not be blank";
+
+            else if (string.IsNullOrWhiteSpace(teacher.Gender))
+                errorMessage = "Gender can not be blank";
+
+            return errorMessage;
         }
     }
 }
