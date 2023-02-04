@@ -6,6 +6,9 @@ using Newtonsoft.Json;
 using System.Collections.Specialized;
 using System.Data;
 using WebApplication1.DTO.InputDTO;
+using WebApplication1.Repositories;
+using static WebApplication1.Enums.GenderTypes;
+using static WebApplication1.Enums.ProductColours;
 
 namespace WebApplication1.Controllers
 {
@@ -13,43 +16,30 @@ namespace WebApplication1.Controllers
     [ApiController]
     public class ProductsController : ControllerBase
     {
-        public readonly IConfiguration _Configuration;
-        SqlConnection sqlConnection;
+        IProductRepository _productRepository;
 
-        public ProductsController(IConfiguration configuration)
+        public ProductsController(IProductRepository productRepository)
         {
-            _Configuration = configuration;
-            sqlConnection = new(_Configuration.GetConnectionString("ECommerceDBConnection").ToString());
+            _productRepository = productRepository;
         }
 
         [HttpGet]
         [Route("GetAllProducts")]
         public IActionResult GetAllProducts()
         {
-            SqlDataAdapter sqlDataAdapter = new("SELECT * FROM Products", sqlConnection);
-            DataTable dataTable = new();
-            sqlDataAdapter.Fill(dataTable);
+            DataTable dataTable = _productRepository.GetAllProducts();
 
             if (dataTable.Rows.Count > 0)
-            {
                 return Ok(JsonConvert.SerializeObject(dataTable));
-            }
             else
-            {
                 return NotFound();
-            }
         }
 
         [HttpGet]
         [Route("GetProductsCount")]
         public IActionResult GetProductsCount()
         {
-            string sqlQuery = "SELECT COUNT(*) FROM Products ";
-            SqlCommand sqlCommand = new(sqlQuery, sqlConnection);
-            sqlConnection.Open();
-            int productCount = Convert.ToInt32(sqlCommand.ExecuteScalar());
-            sqlConnection.Close();
-
+            int productCount = _productRepository.GetProductsCount();
             return Ok(productCount);
         }
 
@@ -58,58 +48,37 @@ namespace WebApplication1.Controllers
         public IActionResult GetProductDetailById(int productId)
         {
             if (productId < 1)
-            {
                 return BadRequest("ProductId should be greater than 0");
-            }
 
-            SqlDataAdapter sqlDataAdapter = new("SELECT * FROM Products WHERE Id = @productId", sqlConnection);
-            sqlDataAdapter.SelectCommand.Parameters.AddWithValue("@productId", productId);
-            DataTable dataTable = new();
-            sqlDataAdapter.Fill(dataTable);
+            DataTable dataTable = _productRepository.GetProductDetailById(productId);
 
             if (dataTable.Rows.Count > 0)
-            {
                 return Ok(JsonConvert.SerializeObject(dataTable));
-            }
             else
-            {
                 return NotFound();
-            }
         }
 
         [HttpGet]
         [Route("GetProducts/{brandName}/{priceUpto}")]
         public IActionResult GetProductsDetailByBrandNameByPriceUpto(string brandName, int priceUpto)
         {
-            if (string.IsNullOrWhiteSpace(brandName))
-            {
-                return BadRequest("BrandName can not be blank");
-            }
             brandName = brandName.Trim();
-            if (brandName.Length < 3 || brandName.Length > 30)
-            {
-                return BadRequest("BrandName should be between 3 and 30 characters.");
-            }
-            if (priceUpto < 600)
-            {
-                return BadRequest("priceUpto should be greater than 600");
-            }
 
-            SqlDataAdapter sqlDataAdapter = new(@"SELECT * FROM Products WHERE BrandName = @brandName AND
-                                                    Price <= @priceUpto", sqlConnection);
-            sqlDataAdapter.SelectCommand.Parameters.AddWithValue("@brandName", brandName);
-            sqlDataAdapter.SelectCommand.Parameters.AddWithValue("@priceUpto", priceUpto);
-            DataTable dataTable = new();
-            sqlDataAdapter.Fill(dataTable);
+            if (string.IsNullOrWhiteSpace(brandName))
+                return BadRequest("BrandName can not be blank");
+
+            else if (brandName.Length < 3 || brandName.Length > 30)
+                return BadRequest("BrandName should be between 3 and 30 characters.");
+
+            else if (priceUpto < 600)
+                return BadRequest("priceUpto should be greater than 600");
+
+            DataTable dataTable = _productRepository.GetProductsDetailByBrandNameByPriceUpto(brandName, priceUpto);
 
             if (dataTable.Rows.Count > 0)
-            {
                 return Ok(JsonConvert.SerializeObject(dataTable));
-            }
             else
-            {
                 return NotFound();
-            }
         }
 
         [HttpGet]
@@ -117,26 +86,14 @@ namespace WebApplication1.Controllers
         public IActionResult GetProductsByPriceRange(int minimumPrice, int maximumPrice)
         {
             if (maximumPrice < minimumPrice)
-            {
                 return BadRequest("Maximum price cannot be less than minimum price");
-            }
 
-            SqlDataAdapter sqlDataAdapter = new(@" SELECT * FROM Products 
-                                                    WHERE Price BETWEEN @minimumPrice AND @maximumPrice
-                                                    ORDER BY Price", sqlConnection);
-            sqlDataAdapter.SelectCommand.Parameters.AddWithValue("@minimumPrice", minimumPrice);
-            sqlDataAdapter.SelectCommand.Parameters.AddWithValue("@maximumPrice", maximumPrice);
-            DataTable dataTable = new();
-            sqlDataAdapter.Fill(dataTable);
+            DataTable dataTable = _productRepository.GetProductsByPriceRange(minimumPrice, maximumPrice);
 
             if (dataTable.Rows.Count > 0)
-            {
                 return Ok(JsonConvert.SerializeObject(dataTable));
-            }
             else
-            {
                 return NotFound();
-            }
         }
 
         [HttpGet]
@@ -144,24 +101,14 @@ namespace WebApplication1.Controllers
         public IActionResult GetDeliverableProductsByPincode(int pincode)
         {
             if (pincode.ToString().Length > 6 || pincode.ToString().Length < 6)
-            {
                 return BadRequest("Pincode should be of six digits only");
-            }
 
-            SqlDataAdapter sqlDataAdapter = new("SELECT * FROM Products WHERE Pincode = @pincode", sqlConnection);
-
-            sqlDataAdapter.SelectCommand.Parameters.AddWithValue("@pincode", pincode);
-            DataTable dataTable = new();
-            sqlDataAdapter.Fill(dataTable);
+            DataTable dataTable = _productRepository.GetDeliverableProductsByPincode(pincode);
 
             if (dataTable.Rows.Count > 0)
-            {
                 return Ok(JsonConvert.SerializeObject(dataTable));
-            }
             else
-            {
                 return NotFound();
-            }
         }
 
         [HttpGet]
@@ -169,35 +116,28 @@ namespace WebApplication1.Controllers
         public IActionResult GetProductsDetailByBrandNameByProductName(string brandName, string? productName)
         {
             if (string.IsNullOrWhiteSpace(productName))
-            {
                 return BadRequest("ProductName can not be blank");
-            }
-            if (productName.Length < 3 || productName.Length > 30)
-            {
+
+            else if (productName.Length < 3 || productName.Length > 30)
                 return BadRequest("ProductName should be between 3 and 30 characters.");
-            }
 
-            string sqlQuery = "SELECT * FROM Products WHERE BrandName = @brandName ";
-
-            if (!string.IsNullOrWhiteSpace(productName))
-            {
-                sqlQuery += "AND ProductName = @productName ";
-            }
-
-            SqlDataAdapter sqlDataAdapter = new(sqlQuery, sqlConnection);
-            sqlDataAdapter.SelectCommand.Parameters.AddWithValue("@brandName", brandName);
-            sqlDataAdapter.SelectCommand.Parameters.AddWithValue("@productName", productName);
-            DataTable dataTable = new();
-            sqlDataAdapter.Fill(dataTable);
+            DataTable dataTable = _productRepository.GetProductsDetailByBrandNameByProductName(brandName, productName);
 
             if (dataTable.Rows.Count > 0)
-            {
                 return Ok(JsonConvert.SerializeObject(dataTable));
-            }
             else
-            {
                 return NotFound();
-            }
+        }
+
+        [HttpGet]
+        [Route("GetProductNameById/{ProductId}")]
+        public IActionResult GetProductNameById(int productId)
+        {
+            if (productId < 1)
+                return BadRequest("product id should be greater than 0");
+
+            string productName = _productRepository.GetProductNameById(productId);
+            return Ok(productName);
         }
 
         [HttpPost]
@@ -206,35 +146,10 @@ namespace WebApplication1.Controllers
         {
             try
             {
-                if (string.IsNullOrWhiteSpace(product.ProductName))
-                {
-                    return BadRequest("ProductName can not be blank");
-                }
-                product.ProductName = product.ProductName.Trim();
-                if (product.ProductName.Length < 3 || product.ProductName.Length > 30)
-                {
-                    return BadRequest("ProductName should be between 3 and 30 characters.");
-                }
-                if (product.Price < 800)
-                {
-                    return BadRequest("Product price should be minimum 800 or more than 800");
-                }
-
                 if (ModelState.IsValid)
                 {
-                    string sqlQuery = @"INSERT INTO Products(ProductName, BrandName, Price, LaunchDate)
-                                        VALUES (@ProductName, @BrandName, @Price, @LaunchDate)
-                                        Select Scope_Identity() ";
-                    SqlCommand sqlCommand = new(sqlQuery, sqlConnection);
-                    sqlCommand.Parameters.AddWithValue("@ProductName", product.ProductName);
-                    sqlCommand.Parameters.AddWithValue("@BrandName", product.BrandName);
-                    sqlCommand.Parameters.AddWithValue("@Price", product.Price);
-                    sqlCommand.Parameters.AddWithValue("@LaunchDate", product.LaunchDate);
-                    sqlConnection.Open();
-                    product.Id = Convert.ToInt32(sqlCommand.ExecuteScalar());
-                    sqlConnection.Close();
-
-                    return Ok(product.Id);
+                    int productId = _productRepository.Add(product);
+                    return Ok(productId);
                 }
                 return BadRequest();
             }
@@ -247,23 +162,57 @@ namespace WebApplication1.Controllers
             }
         }
 
-        [HttpGet]
-        [Route("GetProductNameById/{ProductId}")]
-        public IActionResult GetProductNameById(int productId)
+        [HttpPost]
+        [Route("ProductUpdate")]
+        public IActionResult ProductUpdate([FromBody] ProductDto product)
         {
-            if (productId < 1)
+            try
             {
-                return BadRequest("product id should be greater than 0");
+                string errorMessage = validateProductAddOrUpdate(product, true);
+                if (!string.IsNullOrEmpty(errorMessage))
+                    return BadRequest(errorMessage);
+
+                if (ModelState.IsValid)
+                {
+                    _productRepository.Update(product);
+                    return Ok("Product updated");
+                }
+                return BadRequest("Record not updated");
+            }
+            catch (Exception ex)
+            {
+                ModelState.AddModelError("", @"Unable to save changes. 
+                    Try again, and if the problem persists 
+                    see your system administrator.");
+                return StatusCode(StatusCodes.Status500InternalServerError);
+            }
+        }
+
+        private string validateProductAddOrUpdate(ProductDto product, bool isUpdate = false)
+        {
+            string errorMessage = "";
+
+            product.ProductName = product.ProductName.Trim();
+
+            if (isUpdate == true)
+            {
+                if (product.Id < 1)
+                    errorMessage = "Id can not be less than 0";
             }
 
-            string sqlQuery = "SELECT ProductName FROM Products WHERE Id = @productId";
-            SqlCommand sqlCommand = new(sqlQuery, sqlConnection);
-            sqlCommand.Parameters.AddWithValue("@productId", productId);
-            sqlConnection.Open();
-            string productName = Convert.ToString(sqlCommand.ExecuteScalar());
-            sqlConnection.Close();
+            if (string.IsNullOrWhiteSpace(product.ProductName))
+                errorMessage = "ProductName can not be blank";
 
-            return Ok(productName);
+            else if (product.ProductName.Length < 3 || product.ProductName.Length > 30)
+                errorMessage = "ProductName should be between 3 and 30 characters.";
+
+            else if (product.Price < 800)
+                errorMessage = "Product price should be minimum 800 or more than 800";
+
+            else if (!Enum.IsDefined(typeof(ProductColour), product.ProductColour))
+                errorMessage = "Invalid Colour";
+
+            return errorMessage;
         }
     }
 }
