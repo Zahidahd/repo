@@ -12,6 +12,8 @@ using WebApplication1.DTO.InputDTO;
 using System.Diagnostics.Metrics;
 using System.Reflection;
 using WebApplication1.Repositories;
+using static WebApplication1.Enums.GenderTypes;
+using System.Text.RegularExpressions;
 
 namespace WebApplication1.Controllers
 {
@@ -169,9 +171,12 @@ namespace WebApplication1.Controllers
             string errorMessage = "";
 
             teacher.FullName = teacher.FullName.Trim();
-            teacher.Gender = teacher.Gender.Trim();
+            //teacher.Gender = teacher.Gender.Trim();
             teacher.SchoolName = teacher.SchoolName.Trim();
             teacher.Department = teacher.Department.Trim();
+
+            Regex regex = new Regex(@"^([\w\.\-]+)@([\w\-]+)((\.(\w){2,3})+)$");
+            Match match = regex.Match(teacher.Email);
 
             if (isUpdate == true)
             {
@@ -179,7 +184,10 @@ namespace WebApplication1.Controllers
                     errorMessage = "Id can not be less than 0";
             }
 
-            if (string.IsNullOrWhiteSpace(teacher.FullName))
+            if (!match.Success)
+                errorMessage = "Email is invalid";
+
+            else if (string.IsNullOrWhiteSpace(teacher.FullName))
                 errorMessage = "FullName can not be blank";
 
             else if (teacher.FullName.Length < 3 || teacher.FullName.Length > 30)
@@ -194,8 +202,8 @@ namespace WebApplication1.Controllers
             else if (string.IsNullOrWhiteSpace(teacher.SchoolName))
                 errorMessage = "SchoolName can not be blank";
 
-            else if (string.IsNullOrWhiteSpace(teacher.Gender))
-                errorMessage = "Gender can not be blank";
+            else if (!Enum.IsDefined(typeof(GenderType), teacher.Gender))
+                errorMessage = "Invalid Gender";
 
             return errorMessage;
         }

@@ -12,6 +12,8 @@ using System.Reflection;
 using WebApplication1.DTO.InputDTO;
 using WebApplication1.Repositories;
 using System.Numerics;
+using System.Text.RegularExpressions;
+using static WebApplication1.Enums.GenderTypes;
 
 namespace WebApplication1.Controllers
 {
@@ -173,13 +175,19 @@ namespace WebApplication1.Controllers
             doctor.FullName = doctor.FullName.Trim();
             doctor.Department = doctor.Department.Trim();
 
+            Regex regex = new Regex(@"^([\w\.\-]+)@([\w\-]+)((\.(\w){2,3})+)$");
+            Match match = regex.Match(doctor.Email);
+
             if (isUpdate == true)
             {
                 if (doctor.Id < 1)
                     errorMessage = "Id can not be less than 0";
             }
 
-            if (string.IsNullOrWhiteSpace(doctor.FullName))
+            if (!match.Success)
+                errorMessage = "Email is invalid";
+
+            else if (string.IsNullOrWhiteSpace(doctor.FullName))
                 errorMessage = "FullName cannot be blank";
 
             else if (doctor.FullName.Length < 3 || doctor.FullName.Length > 30)
@@ -187,6 +195,9 @@ namespace WebApplication1.Controllers
 
             else if (string.IsNullOrWhiteSpace(doctor.Department))
                 errorMessage = "Department cannot be blank";
+
+            else if (!Enum.IsDefined(typeof(GenderType), doctor.Gender))
+                errorMessage = "Invalid Gender";
 
             return errorMessage;
         }

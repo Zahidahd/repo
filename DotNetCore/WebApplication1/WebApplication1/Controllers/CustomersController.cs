@@ -11,6 +11,8 @@ using Newtonsoft.Json;
 using System.Reflection;
 using WebApplication1.DTO.InputDTO;
 using WebApplication1.Repositories;
+using static WebApplication1.Enums.GenderTypes;
+using System.Text.RegularExpressions;
 
 namespace WebApplication1.Controllers
 {
@@ -67,7 +69,7 @@ namespace WebApplication1.Controllers
             if (gender.Length > 6)
                 return BadRequest("Gender should not be more than of 6 characters");
 
-            if (country.Length > 10)
+            else if (country.Length > 10)
                 return BadRequest("country should not be more than of 10 characters");
 
             DataTable dataTable = _customerRepository.GetCustomersDetailByGenderByCountry(gender, country);
@@ -76,6 +78,17 @@ namespace WebApplication1.Controllers
                 return Ok(JsonConvert.SerializeObject(dataTable));
             else
                 return NotFound();
+        }
+
+        [HttpGet]
+        [Route("GetCustomerFullNameById/{CustomerId}")]
+        public IActionResult GetCustomerFullNameById(int customerId)
+        {
+            if (customerId < 1)
+                return BadRequest("Customer id should be greater than 0");
+
+            string customerFullName = _customerRepository.GetCustomerFullNameById(customerId);
+            return Ok(customerFullName);
         }
 
         [HttpPost]
@@ -104,49 +117,6 @@ namespace WebApplication1.Controllers
             }
         }
 
-        private string validateCustomerRegisterOrUpdate(CustomerDto customer, bool isUpdate = false)
-        {
-            string errorMessage = "";
-
-            customer.FullName = customer.FullName.Trim();
-            customer.Gender = customer.Gender.Trim();
-            customer.Country = customer.Country.Trim();
-
-            if (isUpdate == true)
-            {
-                if (customer.Id < 1)
-                    errorMessage = "Id can not be less than 0";
-            }
-
-            if (string.IsNullOrWhiteSpace(customer.FullName))
-                errorMessage = "FullName can not be blank";
-
-            else if (customer.FullName.Length < 3 || customer.FullName.Length > 30)
-                errorMessage = "FullName should be between 3 and 30 characters.";
-
-            else if (customer.Age <= 18)
-                errorMessage = "Invalid age, customer age should be above 18";
-
-            else if (string.IsNullOrWhiteSpace(customer.Country))
-                errorMessage = "Country can not be blank";
-
-            else if (string.IsNullOrWhiteSpace(customer.Gender))
-                errorMessage = "Gender can not be blank";
-
-            return errorMessage;
-        }
-
-        [HttpGet]
-        [Route("GetCustomerFullNameById/{CustomerId}")]
-        public IActionResult GetCustomerFullNameById(int customerId)
-        {
-            if (customerId < 1)
-                return BadRequest("Customer id should be greater than 0");
-
-            string customerFullName = _customerRepository.GetCustomerFullNameById(customerId);
-            return Ok(customerFullName);
-        }
-
         [HttpPost]
         [Route("CustomerUpdate")]
         public IActionResult CustomerUpdate([FromBody] CustomerDto customer)
@@ -171,6 +141,43 @@ namespace WebApplication1.Controllers
                     see your system administrator.");
                 return StatusCode(StatusCodes.Status500InternalServerError);
             }
+        }
+
+        private string validateCustomerRegisterOrUpdate(CustomerDto customer, bool isUpdate = false)
+        {
+            string errorMessage = "";
+
+            customer.FullName = customer.FullName.Trim(); 
+            customer.Country = customer.Country.Trim();
+
+            Regex regex = new Regex(@"^([\w\.\-]+)@([\w\-]+)((\.(\w){2,3})+)$");
+            Match match = regex.Match(customer.Email);
+
+            if (isUpdate == true)
+            {
+                if (customer.Id < 1)
+                    errorMessage = "Id can not be less than 0";
+            }
+
+            if (!match.Success)
+                errorMessage = "Email is invalid";
+
+            else if (string.IsNullOrWhiteSpace(customer.FullName))
+                errorMessage = "FullName can not be blank";
+
+            else if (customer.FullName.Length < 3 || customer.FullName.Length > 30)
+                errorMessage = "FullName should be between 3 and 30 characters.";
+
+            else if (customer.Age <= 18)
+                errorMessage = "Invalid age, customer age should be above 18";
+
+            else if (string.IsNullOrWhiteSpace(customer.Country))
+                errorMessage = "Country can not be blank";
+
+            else if (!Enum.IsDefined(typeof(GenderType), customer.Gender))
+                errorMessage = "Invalid Gender";
+
+            return errorMessage;
         }
     }
 }

@@ -124,8 +124,8 @@ namespace WebApplication1.Repositories
                                     DateOfJoining = @DateOfJoining, Salary = @Salary
                                     WHERE Id = @Id ";
                 SqlCommand sqlCommand = new(sqlQuery, sqlConnection);
-                sqlCommand.Parameters.AddWithValue("@FullName", employee.FullName);
                 sqlCommand.Parameters.AddWithValue("@Id", employee.Id);
+                sqlCommand.Parameters.AddWithValue("@FullName", employee.FullName);
                 sqlCommand.Parameters.AddWithValue("@Email", employee.Email);
                 sqlCommand.Parameters.AddWithValue("@Gender", employee.Gender);
                 sqlCommand.Parameters.AddWithValue("@DateOfJoining", employee.DateOfJoining);

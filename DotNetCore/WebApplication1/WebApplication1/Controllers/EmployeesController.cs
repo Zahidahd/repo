@@ -9,6 +9,7 @@ using System.Reflection;
 using System.Text.RegularExpressions;
 using WebApplication1.DTO.InputDTO;
 using WebApplication1.Repositories;
+using static WebApplication1.Enums.GenderTypes;
 
 namespace WebApplication1.Controllers
 {
@@ -163,7 +164,7 @@ namespace WebApplication1.Controllers
             string errorMessage = "";
 
             employee.FullName = employee.FullName.Trim();
-            employee.Gender = employee.Gender.Trim();
+
             Regex regex = new Regex(@"^([\w\.\-]+)@([\w\-]+)((\.(\w){2,3})+)$");
             Match match = regex.Match(employee.Email);
 
@@ -200,6 +201,9 @@ namespace WebApplication1.Controllers
 
             else if (employee.Salary < 8000)
                 errorMessage = "Invalid salary, employee salary should be above 8000";
+
+            else if (!Enum.IsDefined(typeof(GenderType), employee.Gender))
+                errorMessage = "Invalid Gender";
 
             return errorMessage;
         }
