@@ -101,8 +101,8 @@ namespace WebApplication1.Repositories
                 string completeFullName2 = completeFullName.Replace("Mr.", "Janab.");
 
                 string sqlQuery = @"INSERT INTO Doctors(Name, Email, Gender, Department, City)
-                                               VALUES(@FullName, @Email, @Gender, @Department, @City)
-                                               Select Scope_Identity()";
+                        VALUES(@FullName, @Email, @Gender, @Department, @City)
+                        Select Scope_Identity()";
                 SqlCommand sqlCommand = new(sqlQuery, sqlConnection);
                 sqlCommand.Parameters.AddWithValue("@FullName", completeFullName2);
                 sqlCommand.Parameters.AddWithValue("@Email", doctor.Email);
@@ -120,9 +120,9 @@ namespace WebApplication1.Repositories
         {
             using (SqlConnection sqlConnection = new(_connectionString))
             {
-                string sqlQuery = @"UPDATE Doctors SET Name = @FullName, Email = @Email, Gender = @Gender,
-                                                              Department = @Department, City = @City
-                                                              WHERE Id = @Id ";
+                string sqlQuery = @"UPDATE Doctors SET Name = @FullName, Email = @Email,
+                        Gender = @Gender, Department = @Department, City = @City
+                        WHERE Id = @Id ";
                 SqlCommand sqlCommand = new(sqlQuery, sqlConnection);
                 sqlCommand.Parameters.AddWithValue("@Id", doctor.Id);
                 sqlCommand.Parameters.AddWithValue("@FullName", doctor.FullName);

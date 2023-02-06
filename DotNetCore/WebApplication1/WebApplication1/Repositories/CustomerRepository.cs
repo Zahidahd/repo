@@ -1,7 +1,10 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Configuration;
+using System.ComponentModel.DataAnnotations;
 using System.Data;
+using System.Diagnostics.Metrics;
+using System.Reflection;
 using WebApplication1.DTO.InputDTO;
 
 namespace WebApplication1.Repositories
@@ -73,7 +76,7 @@ namespace WebApplication1.Repositories
             using (SqlConnection sqlConnection = new(_connectionString))
             {
                 SqlDataAdapter sqlDataAdapter = new(@"SELECT * FROM Customers WHERE Gender = @gender
-                                                  AND Country = @country ", sqlConnection);
+                                                      AND Country = @country ", sqlConnection);
                 sqlDataAdapter.SelectCommand.Parameters.AddWithValue("@gender", gender);
                 sqlDataAdapter.SelectCommand.Parameters.AddWithValue("@country", country);
                 DataTable dataTable = new();
@@ -86,19 +89,21 @@ namespace WebApplication1.Repositories
         {
             using (SqlConnection sqlConnection = new(_connectionString))
             {
-                string sqlQuery = @"INSERT INTO Customers(Name, Email, Gender, Age, Country)
-                                VALUES (@FullName, @Email, @Gender, @Age, @Country)
-                                Select Scope_Identity()";
-                SqlCommand sqlCommand = new(sqlQuery, sqlConnection);
-                sqlCommand.Parameters.AddWithValue("@FullName", customer.FullName);
-                sqlCommand.Parameters.AddWithValue("@Email", customer.Email);
-                sqlCommand.Parameters.AddWithValue("@Gender", customer.Gender);
-                sqlCommand.Parameters.AddWithValue("@Age", customer.Age);
-                sqlCommand.Parameters.AddWithValue("@Country", customer.Country);
-                sqlConnection.Open();
-                customer.Id = Convert.ToInt32(sqlCommand.ExecuteScalar());
-                sqlConnection.Close();
-                return customer.Id;
+                {
+                    string sqlQuery = @"INSERT INTO Customers(Name, Email, Gender, Age, Country)
+                            VALUES (@FullName, @Email, @Gender, @Age, @Country)
+                            Select Scope_Identity()";
+                    SqlCommand sqlCommand = new(sqlQuery, sqlConnection);
+                    sqlCommand.Parameters.AddWithValue("@FullName", customer.FullName);
+                    sqlCommand.Parameters.AddWithValue("@Email", customer.Email);
+                    sqlCommand.Parameters.AddWithValue("@Gender", customer.Gender);
+                    sqlCommand.Parameters.AddWithValue("@Age", customer.Age);
+                    sqlCommand.Parameters.AddWithValue("@Country", customer.Country);
+                    sqlConnection.Open();
+                    customer.Id = Convert.ToInt32(sqlCommand.ExecuteScalar());
+                    sqlConnection.Close();
+                    return customer.Id;
+                }
             }
         }
 
@@ -108,8 +113,8 @@ namespace WebApplication1.Repositories
             using (SqlConnection sqlConnection = new(_connectionString))
             {
                 string sqlQuery = @" UPDATE Customers SET Name = @FullName, Email = @Email, Gender = @Gender,
-                                         Age = @Age, Country = @Country
-                                         WHERE Id = @Id ";
+                        Age = @Age, Country = @Country
+                        WHERE Id = @Id ";
                 SqlCommand sqlCommand = new(sqlQuery, sqlConnection);
                 sqlCommand.Parameters.AddWithValue("@Id", customer.Id);
                 sqlCommand.Parameters.AddWithValue("@FullName", customer.FullName);
@@ -148,6 +153,20 @@ namespace WebApplication1.Repositories
                 string customerFullName = Convert.ToString(sqlCommand.ExecuteScalar());
                 sqlConnection.Close();
                 return customerFullName;
+            }
+        }
+
+        public int GetEmailCount(CustomerDto customer)
+        {
+            using (SqlConnection sqlConnection = new(_connectionString))
+            {
+                string sqlQueryValidate = "SELECT COUNT(*) FROM Customers Where Email = @Email ";
+                SqlCommand sqlCommand = new(sqlQueryValidate, sqlConnection);
+                sqlCommand.Parameters.AddWithValue("@Email", customer.Email);
+                sqlConnection.Open();
+                int customerEmailCount = Convert.ToInt32(sqlCommand.ExecuteScalar());
+                sqlConnection.Close();
+                return customerEmailCount;
             }
         }
     }

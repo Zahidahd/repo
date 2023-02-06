@@ -126,13 +126,13 @@ namespace WebApplication1.Repositories
         {
             using (SqlConnection sqlConnection = new(_connectionString))
             {
-                string sqlQuery = @"INSERT INTO Products(ProductName, BrandName, ProductColour, Price, LaunchDate)
-                                        VALUES (@ProductName, @BrandName, @ProductColour, @Price, @LaunchDate)
-                                        Select Scope_Identity() ";
+                string sqlQuery = @"INSERT INTO Products(ProductName, BrandName, ProductColor, Price, LaunchDate)
+                        VALUES (@ProductName, @BrandName, @ProductColor, @Price, @LaunchDate)
+                        Select Scope_Identity() ";
                 SqlCommand sqlCommand = new(sqlQuery, sqlConnection);
                 sqlCommand.Parameters.AddWithValue("@ProductName", product.ProductName);
                 sqlCommand.Parameters.AddWithValue("@BrandName", product.BrandName);
-                sqlCommand.Parameters.AddWithValue("@ProductColour", product.ProductColour);
+                sqlCommand.Parameters.AddWithValue("@ProductColour", product.ProductColor);
                 sqlCommand.Parameters.AddWithValue("@Price", product.Price);
                 sqlCommand.Parameters.AddWithValue("@LaunchDate", product.LaunchDate);
                 sqlConnection.Open();
@@ -147,12 +147,12 @@ namespace WebApplication1.Repositories
             using (SqlConnection sqlConnection = new(_connectionString))
             {
                 string sqlQuery = @"UPDATE  Products SET ProductName = @ProductName, BrandName = @BrandName,
-                                                     ProductColour = @ProductColour, Price = @Price, LaunchDate = @LaunchDate
-                                                     WHERE Id = @Id ";
+                        ProductColor = @ProductColor, Price = @Price, LaunchDate = @LaunchDate
+                        WHERE Id = @Id ";
                 SqlCommand sqlCommand = new(sqlQuery, sqlConnection);
                 sqlCommand.Parameters.AddWithValue("@ProductName", product.ProductName);
                 sqlCommand.Parameters.AddWithValue("@BrandName", product.BrandName);
-                sqlCommand.Parameters.AddWithValue("@ProductColour", product.ProductColour);
+                sqlCommand.Parameters.AddWithValue("@ProductColour", product.ProductColor);
                 sqlCommand.Parameters.AddWithValue("@Price", product.Price);
                 sqlCommand.Parameters.AddWithValue("@LaunchDate", product.LaunchDate);
                 sqlCommand.Parameters.AddWithValue("@Id", product.Id);

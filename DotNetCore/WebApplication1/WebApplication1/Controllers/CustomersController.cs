@@ -13,6 +13,7 @@ using WebApplication1.DTO.InputDTO;
 using WebApplication1.Repositories;
 using static WebApplication1.Enums.GenderTypes;
 using System.Text.RegularExpressions;
+using WebApplication1.Enums;
 
 namespace WebApplication1.Controllers
 {
@@ -103,8 +104,14 @@ namespace WebApplication1.Controllers
 
                 if (ModelState.IsValid)
                 {
-                    int id = _customerRepository.Add(customer);
-                    return Ok(id);
+                    int customerEmailCount = _customerRepository.GetEmailCount(customer);
+                    if (customerEmailCount > 0)
+                        return Ok("Duplicate Email, Email already in use");
+                    else
+                    {
+                        int id = _customerRepository.Add(customer);
+                        return Ok(id);
+                    }
                 }
                 return BadRequest();
             }
@@ -129,8 +136,14 @@ namespace WebApplication1.Controllers
 
                 if (ModelState.IsValid)
                 {
-                    _customerRepository.Update(customer);
-                    return Ok("Record updated");
+                    int customerEmailCount = _customerRepository.GetEmailCount(customer);
+                    if (customerEmailCount > 0)
+                        return Ok("Duplicate Email, Email already in use");
+                    else
+                    {
+                        _customerRepository.Update(customer);
+                        return Ok("Record updated");
+                    }
                 }
                 return BadRequest("Record not updated");
             }
@@ -147,7 +160,7 @@ namespace WebApplication1.Controllers
         {
             string errorMessage = "";
 
-            customer.FullName = customer.FullName.Trim(); 
+            customer.FullName = customer.FullName.Trim();
             customer.Country = customer.Country.Trim();
 
             Regex regex = new Regex(@"^([\w\.\-]+)@([\w\-]+)((\.(\w){2,3})+)$");
@@ -174,7 +187,7 @@ namespace WebApplication1.Controllers
             else if (string.IsNullOrWhiteSpace(customer.Country))
                 errorMessage = "Country can not be blank";
 
-            else if (!Enum.IsDefined(typeof(GenderType), customer.Gender))
+            else if (!Enum.IsDefined(typeof(GenderTypes), customer.Gender))
                 errorMessage = "Invalid Gender";
 
             return errorMessage;

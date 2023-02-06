@@ -14,6 +14,7 @@ using WebApplication1.Repositories;
 using System.Numerics;
 using System.Text.RegularExpressions;
 using static WebApplication1.Enums.GenderTypes;
+using WebApplication1.Enums;
 
 namespace WebApplication1.Controllers
 {
@@ -133,11 +134,18 @@ namespace WebApplication1.Controllers
                 }
                 return BadRequest();
             }
+            catch (SqlException ex)
+            {
+                if (ex.Number == 2627)
+                    return BadRequest("Email already exist");
+                else
+                    return BadRequest("some error at database side");
+            }
             catch (Exception ex)
             {
                 ModelState.AddModelError("", @"Unable to save changes. 
-                                               Try again, and if the problem persists 
-                                               see your system administrator.");
+                    Try again, and if the problem persists 
+                    see your system administrator.");
                 return StatusCode(StatusCodes.Status500InternalServerError);
             }
         }
@@ -159,11 +167,18 @@ namespace WebApplication1.Controllers
                 }
                 return BadRequest();
             }
+            catch (SqlException ex)
+            {
+                if (ex.Number == 2627)
+                    return BadRequest("Email already exist");
+                else
+                    return BadRequest("some error at database side");
+            }
             catch (Exception ex)
             {
                 ModelState.AddModelError("", @"Unable to save changes. 
-                                               Try again, and if the problem persists 
-                                               see your system administrator.");
+                    Try again, and if the problem persists 
+                    see your system administrator.");
                 return StatusCode(StatusCodes.Status500InternalServerError);
             }
         }
@@ -196,7 +211,7 @@ namespace WebApplication1.Controllers
             else if (string.IsNullOrWhiteSpace(doctor.Department))
                 errorMessage = "Department cannot be blank";
 
-            else if (!Enum.IsDefined(typeof(GenderType), doctor.Gender))
+            else if (!Enum.IsDefined(typeof(GenderTypes), doctor.Gender))
                 errorMessage = "Invalid Gender";
 
             return errorMessage;

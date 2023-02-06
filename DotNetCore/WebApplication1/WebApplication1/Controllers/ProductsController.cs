@@ -6,9 +6,10 @@ using Newtonsoft.Json;
 using System.Collections.Specialized;
 using System.Data;
 using WebApplication1.DTO.InputDTO;
+using WebApplication1.Enums;
 using WebApplication1.Repositories;
 using static WebApplication1.Enums.GenderTypes;
-using static WebApplication1.Enums.ProductColours;
+using static WebApplication1.Enums.ProductColors;
 
 namespace WebApplication1.Controllers
 {
@@ -209,10 +210,10 @@ namespace WebApplication1.Controllers
             else if (product.Price < 800)
                 errorMessage = "Product price should be minimum 800 or more than 800";
 
-            else if (!Enum.IsDefined(typeof(ProductColour), product.ProductColour))
-                errorMessage = "Invalid Colour";
+            else if (!Enum.IsDefined(typeof(ProductColors), product.ProductColor))
+                errorMessage = "Invalid Color";
 
-            return errorMessage;
+            return errorMessage;    
         }
     }
 }

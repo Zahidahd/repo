@@ -12,6 +12,7 @@ namespace WebApplication1.Repositories
         public int Add(CustomerDto customer);
         public void Update(CustomerDto customer);
         public string GetCustomerFullNameById(int customerId);
+        public int GetEmailCount(CustomerDto customer);
     }
 }
         

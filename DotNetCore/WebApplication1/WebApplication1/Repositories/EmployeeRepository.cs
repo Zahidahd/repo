@@ -85,7 +85,6 @@ namespace WebApplication1.Repositories
         {
             using (SqlConnection sqlConnection = new(_connectionString))
             {
-
                 string sqlQuery = "SELECT FullName FROM Employees WHERE Id = @employeeId";
                 SqlCommand sqlCommand = new(sqlQuery, sqlConnection);
                 sqlCommand.Parameters.AddWithValue("@employeeId", employeeId);
@@ -101,8 +100,8 @@ namespace WebApplication1.Repositories
             using (SqlConnection sqlConnection = new(_connectionString))
             {
                 string sqlQuery = @"INSERT INTO Employees(FullName, Email, Gender, DateOfJoining, Salary)
-                                            VALUES (@FullName, @Email, @Gender, @DateOfJoining, @Salary)
-                                            Select Scope_Identity() ";
+                          VALUES (@FullName, @Email, @Gender, @DateOfJoining, @Salary)
+                          Select Scope_Identity() ";
                 SqlCommand sqlCommand = new(sqlQuery, sqlConnection);
                 sqlCommand.Parameters.AddWithValue("@FullName", employee.FullName);
                 sqlCommand.Parameters.AddWithValue("@Email", employee.Email);
@@ -120,9 +119,9 @@ namespace WebApplication1.Repositories
         {
             using (SqlConnection sqlConnection = new(_connectionString))
             {
-                string sqlQuery = @"UPDATE Employees SET FullName = @FullName, Email =  @Email, Gender = @Gender,
-                                    DateOfJoining = @DateOfJoining, Salary = @Salary
-                                    WHERE Id = @Id ";
+                string sqlQuery = @"UPDATE Employees SET FullName = @FullName, Email =  @Email,
+                        Gender = @Gender, DateOfJoining = @DateOfJoining, Salary = @Salary
+                        WHERE Id = @Id ";
                 SqlCommand sqlCommand = new(sqlQuery, sqlConnection);
                 sqlCommand.Parameters.AddWithValue("@Id", employee.Id);
                 sqlCommand.Parameters.AddWithValue("@FullName", employee.FullName);

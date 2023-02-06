@@ -14,6 +14,7 @@ using System.Reflection;
 using WebApplication1.Repositories;
 using static WebApplication1.Enums.GenderTypes;
 using System.Text.RegularExpressions;
+using WebApplication1.Enums;
 
 namespace WebApplication1.Controllers
 {
@@ -113,7 +114,6 @@ namespace WebApplication1.Controllers
             return Ok(teacherFullName);
         }
 
-
         [HttpPost]
         [Route("TeacherRegister")]
         public IActionResult TeacherRegister([FromBody] TeacherDto teacher)
@@ -130,6 +130,13 @@ namespace WebApplication1.Controllers
                     return Ok(id);
                 }
                 return BadRequest();
+            }
+            catch (SqlException ex)
+            {
+                if (ex.Number == 2627)
+                    return BadRequest("Email already exist");
+                else
+                    return BadRequest("some error at database side");
             }
             catch (Exception ex)
             {
@@ -156,6 +163,13 @@ namespace WebApplication1.Controllers
                     return Ok("Record updated");
                 }
                 return BadRequest("Record not updated");
+            }
+            catch (SqlException ex)
+            {
+                if (ex.Number == 2627)
+                    return BadRequest("Email already exist");
+                else
+                    return BadRequest("some error at database side");
             }
             catch (Exception ex)
             {
@@ -202,7 +216,7 @@ namespace WebApplication1.Controllers
             else if (string.IsNullOrWhiteSpace(teacher.SchoolName))
                 errorMessage = "SchoolName can not be blank";
 
-            else if (!Enum.IsDefined(typeof(GenderType), teacher.Gender))
+            else if (!Enum.IsDefined(typeof(GenderTypes), teacher.Gender))
                 errorMessage = "Invalid Gender";
 
             return errorMessage;

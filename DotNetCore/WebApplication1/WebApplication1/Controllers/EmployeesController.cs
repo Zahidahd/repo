@@ -8,6 +8,7 @@ using System.Data;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using WebApplication1.DTO.InputDTO;
+using WebApplication1.Enums;
 using WebApplication1.Repositories;
 using static WebApplication1.Enums.GenderTypes;
 
@@ -103,7 +104,6 @@ namespace WebApplication1.Controllers
                 return BadRequest("Employee Id should not be less than 1");
 
             string employeeFullName = _employeeRepository.GetEmployeeFullNameById(employeeId);
-
             return Ok(employeeFullName);
         }
 
@@ -123,6 +123,13 @@ namespace WebApplication1.Controllers
                     return Ok(id);
                 }
                 return BadRequest();
+            }
+            catch (SqlException ex)
+            {
+                if (ex.Number == 2627)
+                    return BadRequest("Email already exist");
+                else
+                    return BadRequest("some error at database side");
             }
             catch (Exception ex)
             {
@@ -149,6 +156,13 @@ namespace WebApplication1.Controllers
                     return Ok("Record updated");
                 }
                 return BadRequest();
+            }
+            catch (SqlException ex)
+            {
+                if (ex.Number == 2627)
+                    return BadRequest("Email already exist");
+                else
+                    return BadRequest("some error at database side");
             }
             catch (Exception ex)
             {
@@ -202,7 +216,7 @@ namespace WebApplication1.Controllers
             else if (employee.Salary < 8000)
                 errorMessage = "Invalid salary, employee salary should be above 8000";
 
-            else if (!Enum.IsDefined(typeof(GenderType), employee.Gender))
+            else if (!Enum.IsDefined(typeof(GenderTypes), employee.Gender))
                 errorMessage = "Invalid Gender";
 
             return errorMessage;
