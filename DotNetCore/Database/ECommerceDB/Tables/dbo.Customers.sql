@@ -1,6 +1,6 @@
 CREATE TABLE Customers
 (
-	Id INT IDENTITY(1,1),
+	Id INT IDENTITY(1,1) PRIMARY KEY,
 	Name NVARCHAR(50),
 	Email NVarchar(50),
 	Gender INT,

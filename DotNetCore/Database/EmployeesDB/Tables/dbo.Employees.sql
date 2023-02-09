@@ -1,11 +1,10 @@
 CREATE TABLE Employees
 (
-	Id INT IDENTITY(1,1),
+	Id INT IDENTITY(1,1) PRIMARY KEY,
 	FullName NVARCHAR(50) NOT NULL,
 	Email NVARCHAR(50),
 	Gender INT NOT NULL,
 	DateOfJoining DATETIME,
 	Salary DECIMAL,
-	PRIMARY KEY(Id),
 	CONSTRAINT UQ_Employees_Email UNIQUE(Email)
 )
