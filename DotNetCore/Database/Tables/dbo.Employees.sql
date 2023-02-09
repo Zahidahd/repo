@@ -7,5 +7,5 @@ CREATE TABLE Employees
 	DateOfJoining DATETIME,
 	Salary DECIMAL,
 	PRIMARY KEY(Id),
-	CONSTRAINT UC_Employees UNIQUE(Email)
+	CONSTRAINT UniqueEmail UNIQUE(Email)
 )
