@@ -7,7 +7,7 @@ CREATE TABLE Doctors
 	Gender INT NOT NULL,
 	Department NVARCHAR(50),
 	City NVARCHAR(50)
-    CONSTRAINT DoctorsUniqueEmail UNIQUE(Email),
-    CONSTRAINT DoctorsUniqueRegistrationNumber UNIQUE(RegistrationNumber)
+    CONSTRAINT UQ_Doctors_Email UNIQUE(Email),
+    CONSTRAINT UQ_Doctors_RegistrationNumber UNIQUE(RegistrationNumber)
  )
 

@@ -8,5 +8,5 @@ CREATE TABLE Teachers
 	SchoolName NVARCHAR(50),
 	Department NVARCHAR(50),
 	Salary INT
-	CONSTRAINT TeachersUniqueEmail UNIQUE(Email)
+	CONSTRAINT UQ_Teachers_Email UNIQUE(Email)
 )
