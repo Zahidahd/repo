@@ -30,14 +30,29 @@ namespace WebApplication1.Controllers
 
         [HttpGet]
         [Route("GetAllCustomers")]
-        public IActionResult GetAllCustomers()
+        public IActionResult GetAllCustomersAsList()
         {
-            DataTable dataTable = _customerRepository.GetAllCustomers();
+            List<CustomerDto> customers = _customerRepository.GetAllCustomersAsList();
 
-            if (dataTable.Rows.Count > 0)
-                return Ok(JsonConvert.SerializeObject(dataTable));
+            if (customers.Count > 0)
+                return Ok(customers);
             else
                 return NotFound();
+        }
+     
+        [HttpGet]
+        [Route("GetCustomerDetailById/{CustomerId}")]
+        public IActionResult GetCustomerDetailById(int customerId)
+        {
+            if (customerId < 1)
+                return BadRequest("Customer id should be greater than 0");
+
+            CustomerDto customer = _customerRepository.GetCustomerDetailById(customerId);
+
+            if (customer is not null)
+                return Ok(customer);
+            else
+                return NotFound("No Record Found for given id");
         }
 
         [HttpGet]
@@ -46,21 +61,6 @@ namespace WebApplication1.Controllers
         {
             int customerCount = _customerRepository.GetCustomersCount();
             return Ok(customerCount);
-        }
-
-        [HttpGet]
-        [Route("GetCustomerDetailById/{CustomerId}")]
-        public IActionResult GetCustomerDetailById(int customerId)
-        {
-            if (customerId < 1)
-                return BadRequest("Customer id should be greater than 0");
-
-            DataTable dataTable = _customerRepository.GetCustomerDetailById(customerId);
-
-            if (dataTable.Rows.Count > 0)
-                return Ok(JsonConvert.SerializeObject(dataTable));
-            else
-                return NotFound();
         }
 
         [HttpGet]
@@ -73,10 +73,10 @@ namespace WebApplication1.Controllers
             else if (country.Length > 10)
                 return BadRequest("country should not be more than of 10 characters");
 
-            DataTable dataTable = _customerRepository.GetCustomersDetailByGenderByCountry(gender, country);
+            List<CustomerDto> customers = _customerRepository.GetCustomersDetailByGenderByCountry(gender, country);
 
-            if (dataTable.Rows.Count > 0)
-                return Ok(JsonConvert.SerializeObject(dataTable));
+            if (customers.Count > 0)
+                return Ok(customers);
             else
                 return NotFound();
         }
@@ -105,8 +105,12 @@ namespace WebApplication1.Controllers
                 if (ModelState.IsValid)
                 {
                     int customerEmailCount = _customerRepository.GetEmailCount(customer);
+                    int customerMobileNumberCount = _customerRepository.GetMobileNumberCount(customer);
                     if (customerEmailCount > 0)
-                        return Ok("Duplicate Email, Email already in use");
+                        return Ok("Email already exist");
+
+                    if (customerMobileNumberCount > 0)
+                        return Ok("MobileNumber already exist");
                     else
                     {
                         int id = _customerRepository.Add(customer);
@@ -137,8 +141,13 @@ namespace WebApplication1.Controllers
                 if (ModelState.IsValid)
                 {
                     int customerEmailCount = _customerRepository.GetEmailCount(customer);
+                    int customerMobileNumberCount = _customerRepository.GetMobileNumberCount(customer);
                     if (customerEmailCount > 0)
-                        return Ok("Duplicate Email, Email already in use");
+                        return Ok("Email already exist");
+
+                    if (customerMobileNumberCount > 0)
+                        return Ok("MobileNumber already exist");
+
                     else
                     {
                         _customerRepository.Update(customer);

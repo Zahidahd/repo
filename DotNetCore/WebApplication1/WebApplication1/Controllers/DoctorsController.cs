@@ -33,10 +33,10 @@ namespace WebApplication1.Controllers
         [Route("GetAllDoctors")]
         public IActionResult GetAllDoctors()
         {
-            DataTable dataTable = _doctorRepository.GetAllDoctors();
+            List<DoctorDto> doctors = _doctorRepository.GetAllDoctorsAsList();
 
-            if (dataTable.Rows.Count > 0)
-                return Ok(JsonConvert.SerializeObject(dataTable));
+            if (doctors.Count > 0)
+                return Ok(doctors);
             else
                 return NotFound();
         }
@@ -56,12 +56,12 @@ namespace WebApplication1.Controllers
             if (doctorId < 1)
                 return BadRequest("Doctor Id should be greater than 0");
 
-            DataTable dataTable = _doctorRepository.GetDoctorDetailById(doctorId);
+            DoctorDto doctor = _doctorRepository.GetDoctorDetailById(doctorId);
 
-            if (dataTable.Rows.Count > 0)
-                return Ok(JsonConvert.SerializeObject(dataTable));
+            if (doctor is not null)
+                return Ok(doctor);
             else
-                return NotFound();
+                return NotFound("No Record Found for given id");
         }
 
         [HttpGet]
@@ -80,10 +80,10 @@ namespace WebApplication1.Controllers
             else if (department.Length < 3 || department.Length > 30)
                 return BadRequest("Department should be between 3 and 30 characters.");
 
-            DataTable dataTable = _doctorRepository.GetDoctorsByDepartmentByDoctorName(department, doctorName);
+            List<DoctorDto> doctors = _doctorRepository.GetDoctorsByDepartmentByDoctorName(department, doctorName);
 
-            if (dataTable.Rows.Count > 0)
-                return Ok(JsonConvert.SerializeObject(dataTable));
+            if (doctors.Count > 0)
+                return Ok(doctors);
             else
                 return NotFound();
         }
@@ -98,10 +98,10 @@ namespace WebApplication1.Controllers
             else if (department.Length < 3 || department.Length > 30)
                 return BadRequest("Department should be between 3 and 30 characters.");
 
-            DataTable dataTable = _doctorRepository.GetDoctorsNameListByDepartment(department);
+            List<DoctorDto> doctors = _doctorRepository.GetDoctorsNameListByDepartment(department);
 
-            if (dataTable.Rows.Count > 0)
-                return Ok(JsonConvert.SerializeObject(dataTable));
+            if (doctors.Count > 0)
+                return Ok(doctors);
             else
                 return NotFound();
         }
@@ -137,9 +137,18 @@ namespace WebApplication1.Controllers
             catch (SqlException ex)
             {
                 if (ex.Number == 2627)
-                    return BadRequest("Email already exist");
+                {
+                    if (ex.Message.Contains("UQ_Doctors_RegistrationNumber"))
+                        return BadRequest("RegistrationNumber already exist");
+
+                    if (ex.Message.Contains("UQ_Doctors_Email"))
+                        return BadRequest("Email already exist");
+
+                    else
+                        return BadRequest("Some error at database side");
+                }
                 else
-                    return BadRequest("some error at database side");
+                    return BadRequest("Some error at database side");
             }
             catch (Exception ex)
             {
@@ -170,9 +179,18 @@ namespace WebApplication1.Controllers
             catch (SqlException ex)
             {
                 if (ex.Number == 2627)
-                    return BadRequest("Email already exist");
+                {
+                    if (ex.Message.Contains("UQ_Doctors_RegistrationNumber"))
+                        return BadRequest("RegistrationNumber already exist");
+
+                    if (ex.Message.Contains("UQ_Doctors_Email"))
+                        return BadRequest("Email already exist");
+
+                    else
+                        return BadRequest("Some error at database side");
+                }
                 else
-                    return BadRequest("some error at database side");
+                    return BadRequest("Some error at database side");
             }
             catch (Exception ex)
             {

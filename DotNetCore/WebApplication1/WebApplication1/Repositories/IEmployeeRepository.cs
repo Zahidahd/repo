@@ -5,11 +5,11 @@ namespace WebApplication1.Repositories
 {
     public interface IEmployeeRepository
     {
-        public DataTable GetAllEmployees();
+        public List<EmployeeDto> GetAllEmployeesAsList();
+        public EmployeeDto GetEmployeeDetailById(int id);
         public int GetEmployeesCount();
-        public DataTable GetEmployeeDetailById(int employeeId);
-        public DataTable GetEmployeesDetailByGenderBySalary(string gender, int salary);
-        public DataTable GetEmployeesBySalaryRange(int minimumSalary, int maximumSalary);
+        public List<EmployeeDto> GetEmployeesDetailByGenderBySalary(int gender, int salary);
+        public List<EmployeeDto> GetEmployeesBySalaryRange(int minimumSalary, int maximumSalary);
         public string GetEmployeeFullNameById(int employeeId);
         public int Add(EmployeeDto employee);
         public void Update(EmployeeDto employee);

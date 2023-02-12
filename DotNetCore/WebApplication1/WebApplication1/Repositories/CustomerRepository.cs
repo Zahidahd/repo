@@ -6,6 +6,7 @@ using System.Data;
 using System.Diagnostics.Metrics;
 using System.Reflection;
 using WebApplication1.DTO.InputDTO;
+using WebApplication1.Enums;
 
 namespace WebApplication1.Repositories
 {
@@ -18,44 +19,59 @@ namespace WebApplication1.Repositories
             _connectionString = connectionString;
         }
 
-        public DataTable GetAllCustomers()
+        public List<CustomerDto> GetAllCustomersAsList()
         {
-            //Apporach #1 - Recommended
+            List<CustomerDto> customers = new();
+
             using (SqlConnection sqlConnection = new(_connectionString))
             {
                 SqlDataAdapter sqlDataAdapter = new("SELECT * FROM Customers", sqlConnection);
                 DataTable dataTable = new();
                 sqlDataAdapter.Fill(dataTable);
-                return dataTable;
-            }
 
-            //Apporach #2
-            //SqlConnection sqlConnection = new(_connectionString);
-            //SqlDataAdapter sqlDataAdapter = new("SELECT * FROM Customers", sqlConnection);
-            //DataTable dataTable = new();
-            //sqlDataAdapter.Fill(dataTable);
-            //return dataTable;
+                for (int i = 0; i < dataTable.Rows.Count; i++)
+                {
+                    CustomerDto customerDto = new();
+                    customerDto.Id = (int)dataTable.Rows[i]["Id"];
+                    customerDto.FullName = (string)dataTable.Rows[i]["Name"];
+                    customerDto.Gender = (GenderTypes)dataTable.Rows[i]["Gender"];
+                    customerDto.Age = (int)dataTable.Rows[i]["Age"];
+                    customerDto.Email = (string)dataTable.Rows[i]["Email"];
+                    customerDto.MobileNumber = (string)dataTable.Rows[i]["MobileNumber"];
+                    customerDto.Country = (string)dataTable.Rows[i]["Country"];
+
+                    customers.Add(customerDto);
+                }
+                return customers;
+            }
         }
 
-        public DataTable GetCustomerDetailById(int customerId)
+        public CustomerDto GetCustomerDetailById(int customerId)
         {
-            //Apporach #1 - Recommended
             using (SqlConnection sqlConnection = new(_connectionString))
             {
                 SqlDataAdapter sqlDataAdapter = new("SELECT * FROM Customers WHERE Id = @customerId", sqlConnection);
                 sqlDataAdapter.SelectCommand.Parameters.AddWithValue("@customerId", customerId);
                 DataTable dataTable = new();
                 sqlDataAdapter.Fill(dataTable);
-                return dataTable;
-            }
 
-            ////Apporach #2
-            //SqlConnection sqlConnection = new(_connectionString);
-            //SqlDataAdapter sqlDataAdapter = new("SELECT * FROM Customers WHERE Id = @customerId", sqlConnection);
-            //sqlDataAdapter.SelectCommand.Parameters.AddWithValue("@customerId", customerId);
-            //DataTable dataTable = new();
-            //sqlDataAdapter.Fill(dataTable);
-            //return dataTable;
+                if (dataTable.Rows.Count > 0)
+                {
+                    CustomerDto customerDto = new();
+                    customerDto.Id = (int)dataTable.Rows[0]["Id"];
+                    customerDto.FullName = (string)dataTable.Rows[0]["Name"];
+                    customerDto.Gender = (GenderTypes)dataTable.Rows[0]["Gender"];
+                    customerDto.Age = (int)dataTable.Rows[0]["Age"];
+                    customerDto.Email = (string)dataTable.Rows[0]["Email"];
+                    customerDto.MobileNumber = (string)dataTable.Rows[0]["MobileNumber"];
+                    customerDto.Country = (string)dataTable.Rows[0]["Country"];
+                    return customerDto;
+                }
+                else
+                {
+                    return null;
+                }
+            }
         }
 
         public int GetCustomersCount()
@@ -71,8 +87,10 @@ namespace WebApplication1.Repositories
             }
         }
 
-        public DataTable GetCustomersDetailByGenderByCountry(string gender, string country)
+        public List<CustomerDto> GetCustomersDetailByGenderByCountry(string gender, string country)
         {
+            List<CustomerDto> customers = new();
+
             using (SqlConnection sqlConnection = new(_connectionString))
             {
                 SqlDataAdapter sqlDataAdapter = new(@"SELECT * FROM Customers WHERE Gender = @gender
@@ -81,8 +99,23 @@ namespace WebApplication1.Repositories
                 sqlDataAdapter.SelectCommand.Parameters.AddWithValue("@country", country);
                 DataTable dataTable = new();
                 sqlDataAdapter.Fill(dataTable);
-                return dataTable;
+
+                for (int i = 0; i < dataTable.Rows.Count; i++)
+                {
+                    CustomerDto customerDto = new();
+                    customerDto.Id = (int)dataTable.Rows[i]["Id"];
+                    customerDto.FullName = (string)dataTable.Rows[i]["Name"];
+                    customerDto.Gender = (GenderTypes)dataTable.Rows[i]["Gender"];
+                    customerDto.Age = (int)dataTable.Rows[i]["Age"];
+                    customerDto.Email = (string)dataTable.Rows[i]["Email"];
+                    customerDto.MobileNumber = (string)dataTable.Rows[i]["MobileNumber"];
+                    customerDto.Country = (string)dataTable.Rows[i]["Country"];
+
+                    customers.Add(customerDto);
+                }
+                return customers;
             }
+
         }
 
         public int Add(CustomerDto customer)
@@ -90,14 +123,15 @@ namespace WebApplication1.Repositories
             using (SqlConnection sqlConnection = new(_connectionString))
             {
                 {
-                    string sqlQuery = @"INSERT INTO Customers(Name, Email, Gender, Age, Country)
-                            VALUES (@FullName, @Email, @Gender, @Age, @Country)
+                    string sqlQuery = @"INSERT INTO Customers(Name, Gender, Age, Email, MobileNumber, Country)
+                            VALUES (@FullName, @Gender, @Age, @Email, @MobileNumber, @Country)
                             Select Scope_Identity()";
                     SqlCommand sqlCommand = new(sqlQuery, sqlConnection);
                     sqlCommand.Parameters.AddWithValue("@FullName", customer.FullName);
-                    sqlCommand.Parameters.AddWithValue("@Email", customer.Email);
                     sqlCommand.Parameters.AddWithValue("@Gender", customer.Gender);
                     sqlCommand.Parameters.AddWithValue("@Age", customer.Age);
+                    sqlCommand.Parameters.AddWithValue("@Email", customer.Email);
+                    sqlCommand.Parameters.AddWithValue("@MobileNumber", customer.MobileNumber);
                     sqlCommand.Parameters.AddWithValue("@Country", customer.Country);
                     sqlConnection.Open();
                     customer.Id = Convert.ToInt32(sqlCommand.ExecuteScalar());
@@ -112,15 +146,16 @@ namespace WebApplication1.Repositories
             //Approach #1  - Recommended
             using (SqlConnection sqlConnection = new(_connectionString))
             {
-                string sqlQuery = @" UPDATE Customers SET Name = @FullName, Email = @Email, Gender = @Gender,
-                        Age = @Age, Country = @Country
+                string sqlQuery = @" UPDATE Customers SET Name = @FullName, Gender = @Gender,
+                        Age = @Age, Email = @Email, MobileNumber = @MobileNumber, Country = @Country
                         WHERE Id = @Id ";
                 SqlCommand sqlCommand = new(sqlQuery, sqlConnection);
                 sqlCommand.Parameters.AddWithValue("@Id", customer.Id);
                 sqlCommand.Parameters.AddWithValue("@FullName", customer.FullName);
-                sqlCommand.Parameters.AddWithValue("@Email", customer.Email);
                 sqlCommand.Parameters.AddWithValue("@Gender", customer.Gender);
                 sqlCommand.Parameters.AddWithValue("@Age", customer.Age);
+                sqlCommand.Parameters.AddWithValue("@Email", customer.Email);
+                sqlCommand.Parameters.AddWithValue("@MobileNumber", customer.MobileNumber);
                 sqlCommand.Parameters.AddWithValue("@Country", customer.Country);
                 sqlConnection.Open();
                 sqlCommand.ExecuteNonQuery();
@@ -167,6 +202,20 @@ namespace WebApplication1.Repositories
                 int customerEmailCount = Convert.ToInt32(sqlCommand.ExecuteScalar());
                 sqlConnection.Close();
                 return customerEmailCount;
+            }
+        }
+
+        public int GetMobileNumberCount(CustomerDto customer)
+        {
+            using (SqlConnection sqlConnection = new(_connectionString))
+            {
+                string sqlQueryValidate = "SELECT COUNT(*) FROM Customers Where MobileNumber = @MobileNumber ";
+                SqlCommand sqlCommand = new(sqlQueryValidate, sqlConnection);
+                sqlCommand.Parameters.AddWithValue("@MobileNumber", customer.MobileNumber);
+                sqlConnection.Open();
+                int customerMobileNumberCount = Convert.ToInt32(sqlCommand.ExecuteScalar());
+                sqlConnection.Close();
+                return customerMobileNumberCount;
             }
         }
     }

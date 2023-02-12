@@ -29,12 +29,24 @@ namespace WebApplication1.Controllers
         [Route("GetAllEmployees")]
         public IActionResult GetAllEmployees()
         {
-            DataTable dataTable = _employeeRepository.GetAllEmployees();
+            List<EmployeeDto> employees = _employeeRepository.GetAllEmployeesAsList();
 
-            if (dataTable.Rows.Count > 0)
-                return Ok(JsonConvert.SerializeObject(dataTable));
+            if (employees.Count > 0)
+                return Ok(employees);
             else
                 return NotFound();
+        }
+
+        [HttpGet]
+        [Route("GetEmployeeDetailById/{id}")]
+        public IActionResult GetEmployeeById(int id)
+        {
+            EmployeeDto employee = _employeeRepository.GetEmployeeDetailById(id);
+
+            if (employee is not null)
+                return Ok(employee);
+            else
+                return NotFound("No Record Found for given id");
         }
 
         [HttpGet]
@@ -46,31 +58,16 @@ namespace WebApplication1.Controllers
         }
 
         [HttpGet]
-        [Route("GetEmployeeDetailById/{employeeId}")]
-        public IActionResult GetEmployeeDetailById(int employeeId)
-        {
-            if (employeeId < 1)
-                return BadRequest("EmployeeId should be greater than 0");
-
-            DataTable dataTable = _employeeRepository.GetEmployeeDetailById(employeeId);
-
-            if (dataTable.Rows.Count > 0)
-                return Ok(JsonConvert.SerializeObject(dataTable));
-            else
-                return NotFound();
-        }
-
-        [HttpGet]
         [Route("GetEmployeesDetail/{gender}/{salary}")]
-        public IActionResult GetEmployeesDetailByGenderBySalary(string gender, int salary)
+        public IActionResult GetEmployeesDetailByGenderBySalary(int gender, int salary)
         {
             if (salary < 8000)
                 return BadRequest("Please enter salary above 8000");
 
-            DataTable dataTable = _employeeRepository.GetEmployeesDetailByGenderBySalary(gender, salary);
+            List<EmployeeDto> employees = _employeeRepository.GetEmployeesDetailByGenderBySalary(gender, salary);
 
-            if (dataTable.Rows.Count > 0)
-                return Ok(JsonConvert.SerializeObject(dataTable));
+            if (employees.Count > 0)
+                return Ok(employees);
             else
                 return NotFound();
         }
@@ -88,10 +85,10 @@ namespace WebApplication1.Controllers
             else if (maximumSalary > 500000)
                 return BadRequest("Please enter maximum salary less than 500000");
 
-            DataTable dataTable = _employeeRepository.GetEmployeesBySalaryRange(minimumSalary, maximumSalary);
+            List<EmployeeDto> employees = _employeeRepository.GetEmployeesBySalaryRange(minimumSalary, maximumSalary);
 
-            if (dataTable.Rows.Count > 0)
-                return Ok(JsonConvert.SerializeObject(dataTable));
+            if (employees.Count > 0)
+                return Ok(employees);
             else
                 return NotFound();
         }
@@ -127,9 +124,18 @@ namespace WebApplication1.Controllers
             catch (SqlException ex)
             {
                 if (ex.Number == 2627)
-                    return BadRequest("Email already exist");
+                {
+                    if (ex.Message.Contains("UQ_Employees_MobileNumber"))
+                        return BadRequest("MobileNumber already exist");
+
+                    if (ex.Message.Contains("UQ_Employees_Email"))
+                        return BadRequest("Email already exist");
+
+                    else
+                        return BadRequest("Some error at database side");
+                }
                 else
-                    return BadRequest("some error at database side");
+                    return BadRequest("Some error at database side");
             }
             catch (Exception ex)
             {
@@ -160,9 +166,18 @@ namespace WebApplication1.Controllers
             catch (SqlException ex)
             {
                 if (ex.Number == 2627)
-                    return BadRequest("Email already exist");
+                {
+                    if (ex.Message.Contains("UQ_Employees_MobileNumber"))
+                        return BadRequest("MobileNumber already exist");
+
+                    if (ex.Message.Contains("UQ_Employees_Email"))
+                        return BadRequest("Email already exist");
+
+                    else
+                        return BadRequest("Some error at database side");
+                }
                 else
-                    return BadRequest("some error at database side");
+                    return BadRequest("Some error at database side");
             }
             catch (Exception ex)
             {
