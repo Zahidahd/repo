@@ -5,13 +5,14 @@ namespace WebApplication1.Repositories
 {
     public interface ITeacherRepository
     {
-        public DataTable GetAllTeachers();
+        public List<TeacherDto> GetAllTeachersAsList();
         public int GetTeachersCount();
-        public DataTable GetTeacherDetailById(int teacherId);
-        public DataTable GetTeachersByDepartmentByTeacherName(string department, string teacherName);
-        public DataTable GetTeacherBySalaryRange(int minimumSalary, int maximumSalary);
+        public TeacherDto GetTeacherDetailById(int teacherId);
+        public List<TeacherDto> GetTeachersByDepartmentByTeacherName(string department, string teacherName);
+        public List<TeacherDto> GetTeacherBySalaryRange(int minimumSalary, int maximumSalary);
         public string GetTeacherFullNameById(int teacherId);
         public int Add(TeacherDto teacher);
         public void Update(TeacherDto teacher);
     }
 }
+    
