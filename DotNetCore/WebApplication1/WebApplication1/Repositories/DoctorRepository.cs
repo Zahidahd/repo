@@ -28,10 +28,10 @@ namespace WebApplication1.Repositories
                 {
                     DoctorDto doctorDto = new();
                     doctorDto.Id = (int)dataTable.Rows[i]["Id"];
-                    doctorDto.RegistrationNumber = (int)dataTable.Rows[i]["RegistrationNumber"];
                     doctorDto.FullName = (string)dataTable.Rows[i]["Name"];
-                    doctorDto.Email = (string)dataTable.Rows[i]["Email"];
                     doctorDto.Gender = (GenderTypes)dataTable.Rows[i]["Gender"];
+                    doctorDto.Email = (string)dataTable.Rows[i]["Email"];
+                    doctorDto.RegistrationNumber = (int)dataTable.Rows[i]["RegistrationNumber"];
                     doctorDto.Department = (string)dataTable.Rows[i]["Department"];
                     doctorDto.City = (string)dataTable.Rows[i]["City"];
 
@@ -67,10 +67,10 @@ namespace WebApplication1.Repositories
                 {
                     DoctorDto doctorDto = new();
                     doctorDto.Id = (int)dataTable.Rows[0]["Id"];
-                    doctorDto.RegistrationNumber = (int)dataTable.Rows[0]["RegistrationNumber"];
                     doctorDto.FullName = (string)dataTable.Rows[0]["Name"];
-                    doctorDto.Email = (string)dataTable.Rows[0]["Email"];
                     doctorDto.Gender = (GenderTypes)dataTable.Rows[0]["Gender"];
+                    doctorDto.Email = (string)dataTable.Rows[0]["Email"];
+                    doctorDto.RegistrationNumber = (int)dataTable.Rows[0]["RegistrationNumber"];
                     doctorDto.Department = (string)dataTable.Rows[0]["Department"];
                     doctorDto.City = (string)dataTable.Rows[0]["City"];
                     return doctorDto;
@@ -97,10 +97,10 @@ namespace WebApplication1.Repositories
                 {
                     DoctorDto doctorDto = new();
                     doctorDto.Id = (int)dataTable.Rows[i]["Id"];
-                    doctorDto.RegistrationNumber = (int)dataTable.Rows[i]["RegistrationNumber"];
                     doctorDto.FullName = (string)dataTable.Rows[i]["Name"];
-                    doctorDto.Email = (string)dataTable.Rows[i]["Email"];
                     doctorDto.Gender = (GenderTypes)dataTable.Rows[i]["Gender"];
+                    doctorDto.Email = (string)dataTable.Rows[i]["Email"];
+                    doctorDto.RegistrationNumber = (int)dataTable.Rows[i]["RegistrationNumber"];
                     doctorDto.Department = (string)dataTable.Rows[i]["Department"];
                     doctorDto.City = (string)dataTable.Rows[i]["City"];
 
@@ -125,10 +125,10 @@ namespace WebApplication1.Repositories
                 {
                     DoctorDto doctorDto = new();
                     doctorDto.Id = (int)dataTable.Rows[i]["Id"];
-                    doctorDto.RegistrationNumber = (int)dataTable.Rows[i]["RegistrationNumber"];
                     doctorDto.FullName = (string)dataTable.Rows[i]["Name"];
-                    doctorDto.Email = (string)dataTable.Rows[i]["Email"];
                     doctorDto.Gender = (GenderTypes)dataTable.Rows[i]["Gender"];
+                    doctorDto.Email = (string)dataTable.Rows[i]["Email"];
+                    doctorDto.RegistrationNumber = (int)dataTable.Rows[i]["RegistrationNumber"];
                     doctorDto.Department = (string)dataTable.Rows[i]["Department"];
                     doctorDto.City = (string)dataTable.Rows[i]["City"];
 
