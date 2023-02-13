@@ -1,6 +1,7 @@
 ﻿using Microsoft.Data.SqlClient;
 using System.Data;
 using WebApplication1.DTO.InputDTO;
+using WebApplication1.Enums;
 
 namespace WebApplication1.Repositories
 {
@@ -13,14 +14,28 @@ namespace WebApplication1.Repositories
             _connectionString = connectionString;
         }
 
-        public DataTable GetAllProducts()
+        public List<ProductDto> GetAllProductsAsList()
         {
+            List<ProductDto> products = new();
+
             using (SqlConnection sqlConnection = new(_connectionString))
             {
                 SqlDataAdapter sqlDataAdapter = new("SELECT * FROM Products", sqlConnection);
                 DataTable dataTable = new();
                 sqlDataAdapter.Fill(dataTable);
-                return dataTable;
+
+                for (int i = 0; i < dataTable.Rows.Count; i++)
+                {
+                    ProductDto productDto = new();
+                    productDto.Id = (int)dataTable.Rows[i]["Id"];
+                    productDto.ProductName = (string)dataTable.Rows[i]["ProductName"];
+                    productDto.BrandName = (string)dataTable.Rows[i]["BrandName"];
+                    productDto.ProductColor = (ProductColors)dataTable.Rows[i]["ProductColor"];
+                    productDto.Price = (int)dataTable.Rows[i]["Price"];
+
+                    products.Add(productDto);
+                }
+                return products;
             }
         }
 
@@ -37,7 +52,7 @@ namespace WebApplication1.Repositories
             }
         }
 
-        public DataTable GetProductDetailById(int productId)
+        public ProductDto GetProductDetailById(int productId)
         {
             using (SqlConnection sqlConnection = new(_connectionString))
             {
@@ -45,12 +60,27 @@ namespace WebApplication1.Repositories
                 sqlDataAdapter.SelectCommand.Parameters.AddWithValue("@productId", productId);
                 DataTable dataTable = new();
                 sqlDataAdapter.Fill(dataTable);
-                return dataTable;
+
+                if (dataTable.Rows.Count > 0)
+                {
+                    ProductDto productDto = new();
+                    productDto.Id = (int)dataTable.Rows[0]["Id"];
+                    productDto.ProductName = (string)dataTable.Rows[0]["ProductName"];
+                    productDto.BrandName = (string)dataTable.Rows[0]["BrandName"];
+                    productDto.ProductColor = (ProductColors)dataTable.Rows[0]["ProductColor"];
+                    productDto.Price = (int)dataTable.Rows[0]["Price"];
+
+                    return productDto;
+                }
+                else
+                    return null;
             }
         }
 
-        public DataTable GetProductsDetailByBrandNameByPriceUpto(string brandName, int priceUpto)
+        public List<ProductDto> GetProductsByBrandNameByPriceUpto(string brandName, int priceUpto)
         {
+            List<ProductDto> products = new();
+
             using (SqlConnection sqlConnection = new(_connectionString))
             {
                 SqlDataAdapter sqlDataAdapter = new(@"SELECT * FROM Products WHERE BrandName = @brandName AND
@@ -59,12 +89,26 @@ namespace WebApplication1.Repositories
                 sqlDataAdapter.SelectCommand.Parameters.AddWithValue("@priceUpto", priceUpto);
                 DataTable dataTable = new();
                 sqlDataAdapter.Fill(dataTable);
-                return dataTable;
+
+                for (int i = 0; i < dataTable.Rows.Count; i++)
+                {
+                    ProductDto productDto = new();
+                    productDto.Id = (int)dataTable.Rows[i]["Id"];
+                    productDto.ProductName = (string)dataTable.Rows[i]["ProductName"];
+                    productDto.BrandName = (string)dataTable.Rows[i]["BrandName"];
+                    productDto.ProductColor = (ProductColors)dataTable.Rows[i]["ProductColor"];
+                    productDto.Price = (int)dataTable.Rows[i]["Price"];
+
+                    products.Add(productDto);
+                }   
+                return products;
             }
         }
 
-        public DataTable GetProductsByPriceRange(int minimumPrice, int maximumPrice)
+        public List<ProductDto> GetProductsByPriceRange(int minimumPrice, int maximumPrice)
         {
+            List<ProductDto> products = new();
+
             using (SqlConnection sqlConnection = new(_connectionString))
             {
                 SqlDataAdapter sqlDataAdapter = new(@" SELECT * FROM Products 
@@ -74,24 +118,54 @@ namespace WebApplication1.Repositories
                 sqlDataAdapter.SelectCommand.Parameters.AddWithValue("@maximumPrice", maximumPrice);
                 DataTable dataTable = new();
                 sqlDataAdapter.Fill(dataTable);
-                return dataTable;
+
+                for (int i = 0; i < dataTable.Rows.Count; i++)
+                {
+                    ProductDto productDto = new();
+                    productDto.Id = (int)dataTable.Rows[i]["Id"];
+                    productDto.ProductName = (string)dataTable.Rows[i]["ProductName"];
+                    productDto.BrandName = (string)dataTable.Rows[i]["BrandName"];
+                    productDto.ProductColor = (ProductColors)dataTable.Rows[i]["ProductColor"];
+                    productDto.Price = (int)dataTable.Rows[i]["Price"];
+
+                    products.Add(productDto);
+                }
+                return products;
             }
         }
 
-        public DataTable GetDeliverableProductsByPincode(int pincode)
+        public List<ProductDto> GetDeliverableProductsByPincode(int pincode)
         {
+            List<ProductDto> products = new();
+
             using (SqlConnection sqlConnection = new(_connectionString))
             {
                 SqlDataAdapter sqlDataAdapter = new("SELECT * FROM Products WHERE Pincode = @pincode", sqlConnection);
                 sqlDataAdapter.SelectCommand.Parameters.AddWithValue("@pincode", pincode);
                 DataTable dataTable = new();
                 sqlDataAdapter.Fill(dataTable);
-                return dataTable;
+
+                for (int i = 0; i < dataTable.Rows.Count; i++)
+                {
+                    ProductDto productDto = new();
+                    productDto.Id = (int)dataTable.Rows[i]["Id"];
+                    productDto.ProductName = (string)dataTable.Rows[i]["ProductName"];
+                    productDto.BrandName = (string)dataTable.Rows[i]["BrandName"];
+                    productDto.ProductColor = (ProductColors)dataTable.Rows[i]["ProductColor"];
+                    productDto.Price = (int)dataTable.Rows[i]["Price"];
+                    productDto.PinCode = (int)dataTable.Rows[i]["PinCode"];
+
+                    products.Add(productDto);
+                }
+                return products;
+
             }
         }
 
-        public DataTable GetProductsDetailByBrandNameByProductName(string brandName, string? productName)
+        public List<ProductDto> GetProductsDetailByBrandNameByProductName(string brandName, string? productName)
         {
+            List<ProductDto> products = new();
+
             using (SqlConnection sqlConnection = new(_connectionString))
             {
                 string sqlQuery = "SELECT * FROM Products WHERE BrandName = @brandName ";
@@ -104,7 +178,19 @@ namespace WebApplication1.Repositories
                 sqlDataAdapter.SelectCommand.Parameters.AddWithValue("@productName", productName);
                 DataTable dataTable = new();
                 sqlDataAdapter.Fill(dataTable);
-                return dataTable;
+
+                for (int i = 0; i < dataTable.Rows.Count; i++)
+                {
+                    ProductDto productDto = new();
+                    productDto.Id = (int)dataTable.Rows[i]["Id"];
+                    productDto.ProductName = (string)dataTable.Rows[i]["ProductName"];
+                    productDto.BrandName = (string)dataTable.Rows[i]["BrandName"];
+                    productDto.ProductColor = (ProductColors)dataTable.Rows[i]["ProductColor"];
+                    productDto.Price = (int)dataTable.Rows[i]["Price"];
+
+                    products.Add(productDto);
+                }
+                return products;
             }
         }
 

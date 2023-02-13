@@ -28,10 +28,10 @@ namespace WebApplication1.Controllers
         [Route("GetAllProducts")]
         public IActionResult GetAllProducts()
         {
-            DataTable dataTable = _productRepository.GetAllProducts();
+            List<ProductDto> products = _productRepository.GetAllProductsAsList();
 
-            if (dataTable.Rows.Count > 0)
-                return Ok(JsonConvert.SerializeObject(dataTable));
+            if (products.Count > 0)
+                return Ok(products);
             else
                 return NotFound();
         }
@@ -51,17 +51,17 @@ namespace WebApplication1.Controllers
             if (productId < 1)
                 return BadRequest("ProductId should be greater than 0");
 
-            DataTable dataTable = _productRepository.GetProductDetailById(productId);
+            ProductDto product = _productRepository.GetProductDetailById(productId);
 
-            if (dataTable.Rows.Count > 0)
-                return Ok(JsonConvert.SerializeObject(dataTable));
+            if (product is not null)
+                return Ok(product);
             else
-                return NotFound();
+                return NotFound("No Record Found for given id");
         }
 
         [HttpGet]
-        [Route("GetProducts/{brandName}/{priceUpto}")]
-        public IActionResult GetProductsDetailByBrandNameByPriceUpto(string brandName, int priceUpto)
+        [Route("GetProductsByBrandNameByPriceUpto/{brandName}/{priceUpto}")]
+        public IActionResult GetProductsByBrandNameByPriceUpto(string brandName, int priceUpto)
         {
             brandName = brandName.Trim();
 
@@ -74,10 +74,10 @@ namespace WebApplication1.Controllers
             else if (priceUpto < 600)
                 return BadRequest("priceUpto should be greater than 600");
 
-            DataTable dataTable = _productRepository.GetProductsDetailByBrandNameByPriceUpto(brandName, priceUpto);
+            List<ProductDto> products = _productRepository.GetProductsByBrandNameByPriceUpto(brandName, priceUpto);
 
-            if (dataTable.Rows.Count > 0)
-                return Ok(JsonConvert.SerializeObject(dataTable));
+            if (products.Count > 0)
+                return Ok(products);
             else
                 return NotFound();
         }
@@ -89,10 +89,10 @@ namespace WebApplication1.Controllers
             if (maximumPrice < minimumPrice)
                 return BadRequest("Maximum price cannot be less than minimum price");
 
-            DataTable dataTable = _productRepository.GetProductsByPriceRange(minimumPrice, maximumPrice);
+            List<ProductDto> products = _productRepository.GetProductsByPriceRange(minimumPrice, maximumPrice);
 
-            if (dataTable.Rows.Count > 0)
-                return Ok(JsonConvert.SerializeObject(dataTable));
+            if (products.Count > 0)
+                return Ok(products);
             else
                 return NotFound();
         }
@@ -104,10 +104,10 @@ namespace WebApplication1.Controllers
             if (pincode.ToString().Length > 6 || pincode.ToString().Length < 6)
                 return BadRequest("Pincode should be of six digits only");
 
-            DataTable dataTable = _productRepository.GetDeliverableProductsByPincode(pincode);
+            List<ProductDto> products = _productRepository.GetDeliverableProductsByPincode(pincode);
 
-            if (dataTable.Rows.Count > 0)
-                return Ok(JsonConvert.SerializeObject(dataTable));
+            if (products.Count > 0)
+                return Ok(products);
             else
                 return NotFound();
         }
@@ -122,10 +122,10 @@ namespace WebApplication1.Controllers
             else if (productName.Length < 3 || productName.Length > 30)
                 return BadRequest("ProductName should be between 3 and 30 characters.");
 
-            DataTable dataTable = _productRepository.GetProductsDetailByBrandNameByProductName(brandName, productName);
+            List<ProductDto> products = _productRepository.GetProductsDetailByBrandNameByProductName(brandName, productName);
 
-            if (dataTable.Rows.Count > 0)
-                return Ok(JsonConvert.SerializeObject(dataTable));
+            if (products.Count > 0)
+                return Ok(products);
             else
                 return NotFound();
         }
