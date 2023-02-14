@@ -6,6 +6,7 @@ using Newtonsoft.Json;
 using System.Collections.Specialized;
 using System.Data;
 using WebApplication1.DTO.InputDTO;
+using WebApplication1.Repositories;
 
 namespace WebApplication1.Controllers
 {
@@ -13,43 +14,30 @@ namespace WebApplication1.Controllers
     [ApiController]
     public class OrdersController : ControllerBase
     {
-        public readonly IConfiguration _Configuration;
-        SqlConnection sqlConnection;
+        IOrderRepository _orderRepository;
 
-        public OrdersController(IConfiguration configuration)
+        public OrdersController(IOrderRepository orderRepository)
         {
-            _Configuration = configuration;
-            sqlConnection = new(_Configuration.GetConnectionString("ECommerceDBConnection").ToString());
+            _orderRepository = orderRepository;
         }
 
         [HttpGet]
         [Route("GetAllOrders")]
         public IActionResult GetAllOrders()
         {
-            SqlDataAdapter sqlDataAdapter = new("SELECT * FROM Orders", sqlConnection);
-            DataTable dataTable = new();
-            sqlDataAdapter.Fill(dataTable);
+            List<OrderDto> orders = _orderRepository.GetAllOrdersAsList();
 
-            if (dataTable.Rows.Count > 0)
-            {
-                return Ok(JsonConvert.SerializeObject(dataTable));
-            }
+            if (orders.Count > 0)
+                return Ok(orders);
             else
-            {
                 return NotFound();
-            }
         }
 
         [HttpGet]
         [Route("GetOrdersCount")]
         public IActionResult GetOrdersCount()
         {
-            string sqlQuery = "SELECT COUNT(*) FROM Customers ";
-            SqlCommand sqlCommand = new(sqlQuery, sqlConnection);
-            sqlConnection.Open();
-            int orderCount = Convert.ToInt32(sqlCommand.ExecuteScalar());
-            sqlConnection.Close();
-
+            int orderCount = _orderRepository.GetOrdersCount();
             return Ok(orderCount);
         }
 
@@ -62,44 +50,24 @@ namespace WebApplication1.Controllers
                 return BadRequest("OrderId should be greater than 0");
             }
 
-            SqlDataAdapter sqlDataAdapter = new("SELECT * FROM Orders WHERE Id = @orderId", sqlConnection);
-            sqlDataAdapter.SelectCommand.Parameters.AddWithValue("@orderId", orderId);
-            DataTable dataTable = new();
-            sqlDataAdapter.Fill(dataTable);
+            OrderDto order = _orderRepository.GetOrderDetailById(orderId);
 
-            if (dataTable.Rows.Count > 0)
-            {
-                return Ok(JsonConvert.SerializeObject(dataTable));
-            }
+            if (order is not null)
+                return Ok(order);
             else
-            {
-                return NotFound();
-            }
+                return NotFound("No Record Found for given id");
         }
 
         [HttpGet]
-        [Route("GetOrdersDetailByOrderDate/{orderDate}")]
-        public IActionResult GetOrdersDetailByOrderDate(string orderDate)
+        [Route("GetOrdersByCustomerId/{customerId}")]
+        public IActionResult GetOrdersByCustomerId(int customerId)
         {
-            var orderDateTime = DateTime.Parse(orderDate);
-            if (orderDateTime > DateTime.Now)
-            {
-                return BadRequest("Order Date cannot be greater than current date");
-            }
+            List<OrderDto> orders = _orderRepository.GetOrdersByCustomerId(customerId);
 
-            SqlDataAdapter sqlDataAdapter = new("SELECT * FROM Orders WHERE OrderDate = @orderDateTime", sqlConnection);
-            sqlDataAdapter.SelectCommand.Parameters.AddWithValue("@orderDateTime", orderDateTime);
-            DataTable dataTable = new();
-            sqlDataAdapter.Fill(dataTable);
-
-            if (dataTable.Rows.Count > 0)
-            {
-                return Ok(JsonConvert.SerializeObject(dataTable));
-            }
+            if (orders.Count > 0)
+                return Ok(orders);
             else
-            {
                 return NotFound();
-            }
         }
 
         [HttpPost]
@@ -107,48 +75,13 @@ namespace WebApplication1.Controllers
         public IActionResult OrderAdd([FromBody] OrderDto order)
         {
             try
-            {
-                if (order.CustomerId < 1)
-                {
-                    return BadRequest("CustomerId Should be greater than 0");
-                }
-                if (string.IsNullOrWhiteSpace(order.ProductName))
-                {
-                    return BadRequest("ProductName can not be blank");
-                }
-                order.ProductName = order.ProductName.Trim();
-                if (order.ProductName.Length < 3 || order.ProductName.Length > 30)
-                {
-                    return BadRequest("ProductName should be between 3 and 30 characters.");
-                }
-                if (order.Amount < 50)
-                {
-                    return BadRequest("Invalid amount, order amount should be above 50");
-                }
-                var orderDateTime = DateTime.Parse(order.OrderDate);
-
-                if (orderDateTime > DateTime.Now)
-                {
-                    return BadRequest("Order Date cannot be greater than current date");
-                }
-
+            {                
                 if (ModelState.IsValid)
 
                     if (ModelState.IsValid)
                     {
-                        string sqlQuery = @" INSERT INTO Orders(CustomerId, OrderDate, Amount, ProductName)
-                                             VALUES (@CustomerId, @OrderDate, @Amount, @ProductName)
-                                             Select Scope_Identity() ";
-                        SqlCommand sqlCommand = new(sqlQuery, sqlConnection);
-                        sqlCommand.Parameters.AddWithValue("@CustomerId", order.CustomerId);
-                        sqlCommand.Parameters.AddWithValue("@OrderDate", order.OrderDate);
-                        sqlCommand.Parameters.AddWithValue("@Amount", order.Amount);
-                        sqlCommand.Parameters.AddWithValue("@ProductName", order.ProductName);
-                        sqlConnection.Open();
-                        order.Id = Convert.ToInt32(sqlCommand.ExecuteScalar());
-                        sqlConnection.Close();
-
-                        return Ok(order.Id);
+                       int orderId = _orderRepository.Add(order);
+                        return Ok(orderId);
                     }
                 return BadRequest();
             }
@@ -159,6 +92,57 @@ namespace WebApplication1.Controllers
                     see your system administrator.");
                 return StatusCode(StatusCodes.Status500InternalServerError);
             }
+        }
+
+        [HttpPost]
+        [Route("OrderUpdate")]
+        public IActionResult OrderUpdate([FromBody] OrderDto order)
+        {
+            try
+            {
+                string errorMessage = validateOrderAddOrUpdate(order, true);
+                if (!string.IsNullOrEmpty(errorMessage))
+                    return BadRequest(errorMessage);    
+
+                if (ModelState.IsValid)
+                {
+                    _orderRepository.Update(order);
+                    return Ok("Order updated");
+                }
+                return BadRequest("Record not updated");
+            }
+            catch (Exception ex)
+            {
+                ModelState.AddModelError("", @"Unable to save changes. 
+                    Try again, and if the problem persists 
+                    see your system administrator.");
+                return StatusCode(StatusCodes.Status500InternalServerError);
+            }
+        }
+
+        private string validateOrderAddOrUpdate(OrderDto order, bool isUpdate = false)
+        {
+            string errorMessage = "";
+
+            order.ProductName = order.ProductName.Trim();
+            var orderDateTime = DateTime.Parse(order.OrderDate);
+
+            if (order.CustomerId < 1)
+                errorMessage = "CustomerId Should be greater than 0";
+            
+            else if(string.IsNullOrWhiteSpace(order.ProductName))  
+                errorMessage = "ProductName can not be blank";
+             
+            else if(order.ProductName.Length < 3 || order.ProductName.Length > 30) 
+                errorMessage = "ProductName should be between 3 and 30 characters.";
+            
+            else if(order.Amount < 50)  
+               errorMessage = "Invalid amount, order amount should be above 50";
+            
+            else if(orderDateTime > DateTime.Now)         
+                errorMessage = "Order Date cannot be greater than current date";
+
+            return errorMessage;
         }
     }
 }

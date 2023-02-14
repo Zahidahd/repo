@@ -6,6 +6,6 @@
         public int CustomerId { get; set; }
         public string OrderDate { get; set; }
         public int Amount { get; set; }
-        public string ProductName { get; set; } 
+        public string ProductName { get; set; }
     }
 }
