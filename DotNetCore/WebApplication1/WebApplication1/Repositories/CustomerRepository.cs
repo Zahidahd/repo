@@ -59,21 +59,21 @@ namespace WebApplication1.Repositories
 
                 if (dataTable.Rows.Count > 0)
                 {
-                    CustomerDto customerDto = new();
-                    customerDto.Id = (int)dataTable.Rows[0]["Id"];
-                    customerDto.FullName = (string)dataTable.Rows[0]["Name"];
-                    customerDto.Gender = (GenderTypes)dataTable.Rows[0]["Gender"];
-                    customerDto.Age = (int)dataTable.Rows[0]["Age"];
-                    customerDto.Email = (string)dataTable.Rows[0]["Email"];
-                    customerDto.Password = (string)dataTable.Rows[0]["Password"];
-                    customerDto.MobileNumber = (string)dataTable.Rows[0]["MobileNumber"];
-                    customerDto.Country = (string)dataTable.Rows[0]["Country"];
+                    CustomerDto customerDto = new()
+                    {
+                        Id = (int)dataTable.Rows[0]["Id"],
+                        FullName = (string)dataTable.Rows[0]["Name"],
+                        Gender = (GenderTypes)dataTable.Rows[0]["Gender"],
+                        Age = (int)dataTable.Rows[0]["Age"],
+                        Email = (string)dataTable.Rows[0]["Email"],
+                        Password = (string)dataTable.Rows[0]["Password"],
+                        MobileNumber = (string)dataTable.Rows[0]["MobileNumber"],
+                        Country = (string)dataTable.Rows[0]["Country"]
+                    };             
                     return customerDto;
                 }
-                else
-                {
-                    return null;
-                }
+                else                
+                  return null;              
             }
         }
 
