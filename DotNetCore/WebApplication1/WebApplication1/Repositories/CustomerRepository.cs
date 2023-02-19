@@ -37,6 +37,7 @@ namespace WebApplication1.Repositories
                     customerDto.Gender = (GenderTypes)dataTable.Rows[i]["Gender"];
                     customerDto.Age = (int)dataTable.Rows[i]["Age"];
                     customerDto.Email = (string)dataTable.Rows[i]["Email"];
+                    customerDto.Password = (string)dataTable.Rows[i]["Password"];
                     customerDto.MobileNumber = (string)dataTable.Rows[i]["MobileNumber"];
                     customerDto.Country = (string)dataTable.Rows[i]["Country"];
 
@@ -63,6 +64,7 @@ namespace WebApplication1.Repositories
                     customerDto.Gender = (GenderTypes)dataTable.Rows[0]["Gender"];
                     customerDto.Age = (int)dataTable.Rows[0]["Age"];
                     customerDto.Email = (string)dataTable.Rows[0]["Email"];
+                    customerDto.Password = (string)dataTable.Rows[0]["Password"];
                     customerDto.MobileNumber = (string)dataTable.Rows[0]["MobileNumber"];
                     customerDto.Country = (string)dataTable.Rows[0]["Country"];
                     return customerDto;
@@ -108,6 +110,7 @@ namespace WebApplication1.Repositories
                     customerDto.Gender = (GenderTypes)dataTable.Rows[i]["Gender"];
                     customerDto.Age = (int)dataTable.Rows[i]["Age"];
                     customerDto.Email = (string)dataTable.Rows[i]["Email"];
+                    customerDto.Password = (string)dataTable.Rows[i]["Password"];
                     customerDto.MobileNumber = (string)dataTable.Rows[i]["MobileNumber"];
                     customerDto.Country = (string)dataTable.Rows[i]["Country"];
 
@@ -123,14 +126,15 @@ namespace WebApplication1.Repositories
             using (SqlConnection sqlConnection = new(_connectionString))
             {
                 {
-                    string sqlQuery = @"INSERT INTO Customers(Name, Gender, Age, Email, MobileNumber, Country)
-                            VALUES (@FullName, @Gender, @Age, @Email, @MobileNumber, @Country)
+                    string sqlQuery = @"INSERT INTO Customers(Name, Gender, Age, Email, Password, MobileNumber, Country)
+                            VALUES (@FullName, @Gender, @Age, @Email, @Password, @MobileNumber, @Country)
                             Select Scope_Identity()";
                     SqlCommand sqlCommand = new(sqlQuery, sqlConnection);
                     sqlCommand.Parameters.AddWithValue("@FullName", customer.FullName);
                     sqlCommand.Parameters.AddWithValue("@Gender", customer.Gender);
                     sqlCommand.Parameters.AddWithValue("@Age", customer.Age);
                     sqlCommand.Parameters.AddWithValue("@Email", customer.Email);
+                    sqlCommand.Parameters.AddWithValue("@Password", customer.Password);
                     sqlCommand.Parameters.AddWithValue("@MobileNumber", customer.MobileNumber);
                     sqlCommand.Parameters.AddWithValue("@Country", customer.Country);
                     sqlConnection.Open();
@@ -147,7 +151,7 @@ namespace WebApplication1.Repositories
             using (SqlConnection sqlConnection = new(_connectionString))
             {
                 string sqlQuery = @" UPDATE Customers SET Name = @FullName, Gender = @Gender,
-                        Age = @Age, Email = @Email, MobileNumber = @MobileNumber, Country = @Country
+                        Age = @Age, Email = @Email, Password = @Password, MobileNumber = @MobileNumber, Country = @Country
                         WHERE Id = @Id ";
                 SqlCommand sqlCommand = new(sqlQuery, sqlConnection);
                 sqlCommand.Parameters.AddWithValue("@Id", customer.Id);
@@ -155,6 +159,7 @@ namespace WebApplication1.Repositories
                 sqlCommand.Parameters.AddWithValue("@Gender", customer.Gender);
                 sqlCommand.Parameters.AddWithValue("@Age", customer.Age);
                 sqlCommand.Parameters.AddWithValue("@Email", customer.Email);
+                sqlCommand.Parameters.AddWithValue("@Password", customer.Password);
                 sqlCommand.Parameters.AddWithValue("@MobileNumber", customer.MobileNumber);
                 sqlCommand.Parameters.AddWithValue("@Country", customer.Country);
                 sqlConnection.Open();
