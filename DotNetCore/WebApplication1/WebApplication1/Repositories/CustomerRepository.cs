@@ -31,16 +31,17 @@ namespace WebApplication1.Repositories
 
                 for (int i = 0; i < dataTable.Rows.Count; i++)
                 {
-                    CustomerDto customerDto = new();
-                    customerDto.Id = (int)dataTable.Rows[i]["Id"];
-                    customerDto.FullName = (string)dataTable.Rows[i]["Name"];
-                    customerDto.Gender = (GenderTypes)dataTable.Rows[i]["Gender"];
-                    customerDto.Age = (int)dataTable.Rows[i]["Age"];
-                    customerDto.Email = (string)dataTable.Rows[i]["Email"];
-                    customerDto.Password = (string)dataTable.Rows[i]["Password"];
-                    customerDto.MobileNumber = (string)dataTable.Rows[i]["MobileNumber"];
-                    customerDto.Country = (string)dataTable.Rows[i]["Country"];
-
+                    CustomerDto customerDto = new()
+                    {
+                        Id = (int)dataTable.Rows[i]["Id"],
+                        FullName = (string)dataTable.Rows[i]["Name"],
+                        Gender = (GenderTypes)dataTable.Rows[i]["Gender"],
+                        Age = (int)dataTable.Rows[i]["Age"],
+                        Email = (string)dataTable.Rows[i]["Email"],
+                        Password = (string)dataTable.Rows[i]["Password"],
+                        MobileNumber = (string)dataTable.Rows[i]["MobileNumber"],
+                        Country = (string)dataTable.Rows[i]["Country"]
+                    };
                     customers.Add(customerDto);
                 }
                 return customers;
@@ -104,21 +105,21 @@ namespace WebApplication1.Repositories
 
                 for (int i = 0; i < dataTable.Rows.Count; i++)
                 {
-                    CustomerDto customerDto = new();
-                    customerDto.Id = (int)dataTable.Rows[i]["Id"];
-                    customerDto.FullName = (string)dataTable.Rows[i]["Name"];
-                    customerDto.Gender = (GenderTypes)dataTable.Rows[i]["Gender"];
-                    customerDto.Age = (int)dataTable.Rows[i]["Age"];
-                    customerDto.Email = (string)dataTable.Rows[i]["Email"];
-                    customerDto.Password = (string)dataTable.Rows[i]["Password"];
-                    customerDto.MobileNumber = (string)dataTable.Rows[i]["MobileNumber"];
-                    customerDto.Country = (string)dataTable.Rows[i]["Country"];
-
+                    CustomerDto customerDto = new()
+                    {
+                        Id = (int)dataTable.Rows[i]["Id"],
+                        FullName = (string)dataTable.Rows[i]["Name"],
+                        Gender = (GenderTypes)dataTable.Rows[i]["Gender"],
+                        Age = (int)dataTable.Rows[i]["Age"],
+                        Email = (string)dataTable.Rows[i]["Email"],
+                        Password = (string)dataTable.Rows[i]["Password"],
+                        MobileNumber = (string)dataTable.Rows[i]["MobileNumber"],
+                        Country = (string)dataTable.Rows[i]["Country"]
+                    };
                     customers.Add(customerDto);
                 }
                 return customers;
             }
-
         }
 
         public int Add(CustomerDto customer)
