@@ -5,6 +5,8 @@ using System.ComponentModel.DataAnnotations;
 using System.Data;
 using System.Diagnostics.Metrics;
 using System.Reflection;
+using System.Text;
+using System.Security.Cryptography;
 using WebApplication1.DTO.InputDTO;
 using WebApplication1.Enums;
 
@@ -122,11 +124,47 @@ namespace WebApplication1.Repositories
             }
         }
 
+        public List<CustomerDto> Login(string email, string password)
+        {
+            List<CustomerDto> customers = new();
+
+            using (SqlConnection sqlConnection = new(_connectionString))
+            {
+                SHA256 sha256 = SHA256Managed.Create();
+                byte[] hashValue;
+                UTF8Encoding objUtf8 = new UTF8Encoding();
+                hashValue = sha256.ComputeHash(objUtf8.GetBytes(password));
+                    
+                SqlDataAdapter sqlDataAdapter = new(@"SELECT Email, Password FROM Customers
+                        WHERE Email = @email AND Password = @password ", sqlConnection);                                                       
+                sqlDataAdapter.SelectCommand.Parameters.AddWithValue("@email", email);
+                sqlDataAdapter.SelectCommand.Parameters.AddWithValue("@password", hashValue);
+                DataTable dataTable = new();
+                sqlDataAdapter.Fill(dataTable);
+
+                for (int i = 0; i < dataTable.Rows.Count; i++)
+                {
+                    CustomerDto customerDto = new()
+                    {                      
+                        Email = (string)dataTable.Rows[i]["Email"],
+                        Password = (string)dataTable.Rows[i]["Password"],                    
+                    };
+                    customers.Add(customerDto);
+                }
+                return customers;
+            }
+        }
+
         public int Add(CustomerDto customer)
         {
             using (SqlConnection sqlConnection = new(_connectionString))
             {
                 {
+                    SHA256 sha256 = SHA256Managed.Create();
+                    byte[] hashValue;
+                    UTF8Encoding objUtf8 = new UTF8Encoding();
+                    hashValue = sha256.ComputeHash(objUtf8.GetBytes(customer.Password));
+
                     string sqlQuery = @"INSERT INTO Customers(Name, Gender, Age, Email, Password, MobileNumber, Country)
                             VALUES (@FullName, @Gender, @Age, @Email, @Password, @MobileNumber, @Country)
                             Select Scope_Identity()";
@@ -135,7 +173,7 @@ namespace WebApplication1.Repositories
                     sqlCommand.Parameters.AddWithValue("@Gender", customer.Gender);
                     sqlCommand.Parameters.AddWithValue("@Age", customer.Age);
                     sqlCommand.Parameters.AddWithValue("@Email", customer.Email);
-                    sqlCommand.Parameters.AddWithValue("@Password", customer.Password);
+                    sqlCommand.Parameters.AddWithValue("@Password", hashValue);
                     sqlCommand.Parameters.AddWithValue("@MobileNumber", customer.MobileNumber);
                     sqlCommand.Parameters.AddWithValue("@Country", customer.Country);
                     sqlConnection.Open();
@@ -151,6 +189,11 @@ namespace WebApplication1.Repositories
             //Approach #1  - Recommended
             using (SqlConnection sqlConnection = new(_connectionString))
             {
+                SHA256 sha256 = SHA256Managed.Create();
+                byte[] hashValue;
+                UTF8Encoding objUtf8 = new UTF8Encoding();
+                hashValue = sha256.ComputeHash(objUtf8.GetBytes(customer.Password));
+
                 string sqlQuery = @" UPDATE Customers SET Name = @FullName, Gender = @Gender,
                         Age = @Age, Email = @Email, Password = @Password, MobileNumber = @MobileNumber, Country = @Country
                         WHERE Id = @Id ";
@@ -160,7 +203,7 @@ namespace WebApplication1.Repositories
                 sqlCommand.Parameters.AddWithValue("@Gender", customer.Gender);
                 sqlCommand.Parameters.AddWithValue("@Age", customer.Age);
                 sqlCommand.Parameters.AddWithValue("@Email", customer.Email);
-                sqlCommand.Parameters.AddWithValue("@Password", customer.Password);
+                sqlCommand.Parameters.AddWithValue("@Password", hashValue);
                 sqlCommand.Parameters.AddWithValue("@MobileNumber", customer.MobileNumber);
                 sqlCommand.Parameters.AddWithValue("@Country", customer.Country);
                 sqlConnection.Open();

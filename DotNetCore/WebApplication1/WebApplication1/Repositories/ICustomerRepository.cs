@@ -14,5 +14,6 @@ namespace WebApplication1.Repositories
         public string GetCustomerFullNameById(int customerId);
         public int GetEmailCount(CustomerDto customer);
         public int GetMobileNumberCount(CustomerDto customer);
+        public List<CustomerDto> Login(string email, string password);
     }
 }

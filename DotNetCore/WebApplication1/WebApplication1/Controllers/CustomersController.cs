@@ -14,6 +14,7 @@ using WebApplication1.Repositories;
 using static WebApplication1.Enums.GenderTypes;
 using System.Text.RegularExpressions;
 using WebApplication1.Enums;
+using System.Diagnostics.Metrics;
 
 namespace WebApplication1.Controllers
 {
@@ -90,6 +91,18 @@ namespace WebApplication1.Controllers
 
             string customerFullName = _customerRepository.GetCustomerFullNameById(customerId);
             return Ok(customerFullName);
+        }
+
+        [HttpGet]
+        [Route("Login/{email}/{password}")]
+        public IActionResult Login(string email, string password)
+        {
+            List<CustomerDto> customersEmailPassword = _customerRepository.Login(email, password);
+
+            if(customersEmailPassword.Count > 0)
+                return Ok("Login Successfull");
+            else
+                return NotFound("Invalid Email or Password");
         }
 
         [HttpPost]
