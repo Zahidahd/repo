@@ -71,11 +71,11 @@ namespace WebApplication1.Repositories
                         Password = (string)dataTable.Rows[0]["Password"],
                         MobileNumber = (string)dataTable.Rows[0]["MobileNumber"],
                         Country = (string)dataTable.Rows[0]["Country"]
-                    };             
+                    };
                     return customerDto;
                 }
-                else                
-                  return null;              
+                else
+                    return null;
             }
         }
 
@@ -124,34 +124,82 @@ namespace WebApplication1.Repositories
             }
         }
 
-        public List<CustomerDto> Login(string email, string password)
-        {
-            List<CustomerDto> customers = new();
-
+        public int Login(string email, string password)
+        {   
             using (SqlConnection sqlConnection = new(_connectionString))
             {
                 SHA256 sha256 = SHA256Managed.Create();
-                byte[] hashValue;
+                byte[] hashValuePassword;
                 UTF8Encoding objUtf8 = new UTF8Encoding();
-                hashValue = sha256.ComputeHash(objUtf8.GetBytes(password));
-                    
-                SqlDataAdapter sqlDataAdapter = new(@"SELECT Email, Password FROM Customers
-                        WHERE Email = @email AND Password = @password ", sqlConnection);                                                       
-                sqlDataAdapter.SelectCommand.Parameters.AddWithValue("@email", email);
-                sqlDataAdapter.SelectCommand.Parameters.AddWithValue("@password", hashValue);
-                DataTable dataTable = new();
-                sqlDataAdapter.Fill(dataTable);
+                hashValuePassword = sha256.ComputeHash(objUtf8.GetBytes(password));
 
-                for (int i = 0; i < dataTable.Rows.Count; i++)
-                {
-                    CustomerDto customerDto = new()
-                    {                      
-                        Email = (string)dataTable.Rows[i]["Email"],
-                        Password = (string)dataTable.Rows[i]["Password"],                    
-                    };
-                    customers.Add(customerDto);
-                }
-                return customers;
+                string sqlQuery = @"SELECT COUNT(*) FROM Customers
+                            WHERE Email = @email AND Password = @password";
+                SqlCommand sqlCommand = new(sqlQuery, sqlConnection);
+                sqlCommand.Parameters.AddWithValue("@email", email);
+                sqlCommand.Parameters.AddWithValue("@password", hashValuePassword);
+                sqlConnection.Open();
+                int customerCount = Convert.ToInt32(sqlCommand.ExecuteScalar());
+                sqlConnection.Close();
+                return customerCount;
+            }
+        }
+
+        public void UpdateOnLoginFailed (string email)
+        {
+            using (SqlConnection sqlConnection = new(_connectionString))
+            {            
+                string sqlQuery = $@"UPDATE Customers SET LoginFailedCount = IsNull(LoginFailedCount, 0) + 1,
+                                    LastFailedLoginDate = getdate()
+                                    WHERE Email = @email";
+                SqlCommand sqlCommand = new(sqlQuery, sqlConnection);
+                sqlCommand.Parameters.AddWithValue("@email", email);
+                sqlConnection.Open();
+                sqlCommand.ExecuteNonQuery();
+                sqlConnection.Close();
+            }
+        }
+
+        public void UpdateOnLoginSuccessfull(string email) 
+        {
+            using (SqlConnection sqlConnection = new(_connectionString))
+            {
+                string sqlQuery = @"UPDATE Customers SET LastSuccessfulLoginDate = getdate()
+                                    WHERE Email = @email";
+                SqlCommand sqlCommand = new(sqlQuery, sqlConnection);
+                sqlCommand.Parameters.AddWithValue("@email", email);
+                sqlConnection.Open();
+                sqlCommand.ExecuteNonQuery();
+                sqlConnection.Close();
+            }
+        }
+
+        public int LoginFailedCount(string email)
+        {
+            using (SqlConnection sqlConnection = new(_connectionString))
+            {
+                string sqlQuery = "SELECT IsNull(LoginFailedCount, 0) FROM Customers WHERE Email = @Email";
+                SqlCommand sqlCommand = new(sqlQuery, sqlConnection);
+                sqlCommand.Parameters.AddWithValue("@email", email);
+                sqlConnection.Open();
+                int loginFailedCount = Convert.ToInt32(sqlCommand.ExecuteScalar());
+                sqlConnection.Close();
+                return loginFailedCount;    
+            }
+        }
+
+        public void UpdateIsLocked(string email, bool isLocked = true)
+        {
+            using (SqlConnection sqlConnection = new(_connectionString))
+            {
+                string sqlQuery = @"UPDATE Customers SET IsLocked = @isLocked
+                                    WHERE Email = @email";
+                SqlCommand sqlCommand = new(sqlQuery, sqlConnection);
+                sqlCommand.Parameters.AddWithValue("@email", email);
+                sqlCommand.Parameters.AddWithValue("@isLocked", isLocked);
+                sqlConnection.Open();
+                sqlCommand.ExecuteNonQuery();
+                sqlConnection.Close();
             }
         }
 
@@ -161,9 +209,9 @@ namespace WebApplication1.Repositories
             {
                 {
                     SHA256 sha256 = SHA256Managed.Create();
-                    byte[] hashValue;
+                    byte[] hashValuePassword;
                     UTF8Encoding objUtf8 = new UTF8Encoding();
-                    hashValue = sha256.ComputeHash(objUtf8.GetBytes(customer.Password));
+                    hashValuePassword = sha256.ComputeHash(objUtf8.GetBytes(customer.Password));
 
                     string sqlQuery = @"INSERT INTO Customers(Name, Gender, Age, Email, Password, MobileNumber, Country)
                             VALUES (@FullName, @Gender, @Age, @Email, @Password, @MobileNumber, @Country)
@@ -173,7 +221,7 @@ namespace WebApplication1.Repositories
                     sqlCommand.Parameters.AddWithValue("@Gender", customer.Gender);
                     sqlCommand.Parameters.AddWithValue("@Age", customer.Age);
                     sqlCommand.Parameters.AddWithValue("@Email", customer.Email);
-                    sqlCommand.Parameters.AddWithValue("@Password", hashValue);
+                    sqlCommand.Parameters.AddWithValue("@Password", hashValuePassword);
                     sqlCommand.Parameters.AddWithValue("@MobileNumber", customer.MobileNumber);
                     sqlCommand.Parameters.AddWithValue("@Country", customer.Country);
                     sqlConnection.Open();
@@ -266,6 +314,7 @@ namespace WebApplication1.Repositories
                 sqlConnection.Close();
                 return customerMobileNumberCount;
             }
-        }
+        }    
     }
 }
+    

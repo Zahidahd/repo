@@ -15,6 +15,7 @@ using static WebApplication1.Enums.GenderTypes;
 using System.Text.RegularExpressions;
 using WebApplication1.Enums;
 using System.Diagnostics.Metrics;
+using System.Text;
 
 namespace WebApplication1.Controllers
 {
@@ -97,12 +98,24 @@ namespace WebApplication1.Controllers
         [Route("Login/{email}/{password}")]
         public IActionResult Login(string email, string password)
         {
-            List<CustomerDto> customersEmailPassword = _customerRepository.Login(email, password);
-
-            if(customersEmailPassword.Count > 0)
+            int customerCount = _customerRepository.Login(email, password);
+            int loginFailedCount = _customerRepository.LoginFailedCount(email);
+                
+            if(customerCount > 0)
+            {
+                _customerRepository.UpdateOnLoginSuccessfull(email);
                 return Ok("Login Successfull");
+            }
+            else if(loginFailedCount > 3)
+            {
+                _customerRepository.UpdateIsLocked(email);
+                return Ok("Login attempt exceeded, your account has been temporarily locked");
+            }
             else
+            {
+                _customerRepository.UpdateOnLoginFailed(email); 
                 return NotFound("Invalid Email or Password");
+            }
         }
 
         [HttpPost]
