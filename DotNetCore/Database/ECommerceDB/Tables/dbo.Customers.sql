@@ -6,8 +6,12 @@ CREATE TABLE Customers
 	Age INT,
     Email NVarchar(50),
 	Password NVARCHAR(50),
-	MobileNumber NVarchar(50),
 	Country NVARCHAR(50),
+	MobileNumber NVarchar(50),
+	LastFailedLoginDate DateTime,
+	LastSucccessfulLoginDate DateTime,
+	LoginFailedCout Int,
+	IsLocked Bit,
 	CONSTRAINT UQ_Customers_Email UNIQUE(Email),
 	CONSTRAINT UQ_Customers_MobileNumber UNIQUE(MobileNumber)
 )
