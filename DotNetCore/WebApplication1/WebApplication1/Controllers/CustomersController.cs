@@ -16,6 +16,7 @@ using System.Text.RegularExpressions;
 using WebApplication1.Enums;
 using System.Diagnostics.Metrics;
 using System.Text;
+using WebApplication1.Helpers;
 
 namespace WebApplication1.Controllers
 {
@@ -98,24 +99,27 @@ namespace WebApplication1.Controllers
         [Route("Login/{email}/{password}")]
         public IActionResult Login(string email, string password)
         {
-            int customerCount = _customerRepository.Login(email, password);
-            int loginFailedCount = _customerRepository.LoginFailedCount(email);
-                
-            if(customerCount > 0)
+            byte[] hashValuePassword = StringHelper.StringToByteArray(password);
+            CustomerDto customer = _customerRepository.GetCustomerDetailsByEmailAndPassword(email, hashValuePassword);
+
+            if (customer is null)
             {
-                _customerRepository.UpdateOnLoginSuccessfull(email);
-                return Ok("Login Successfull");
-            }
-            else if(loginFailedCount > 3)
-            {
-                _customerRepository.UpdateIsLocked(email);
-                return Ok("Login attempt exceeded, your account has been temporarily locked");
-            }
-            else
-            {
-                _customerRepository.UpdateOnLoginFailed(email); 
+                _customerRepository.UpdateOnLoginFailed(email)
+;
+                int aleadyFailedCountInDB = _customerRepository.GetLoginFailedCount(email)
+;
+                if (aleadyFailedCountInDB > 1)
+                {
+                    _customerRepository.UpdateIsLocked(email);
+                }
                 return NotFound("Invalid Email or Password");
             }
+
+            if (customer.IsLocked)
+                return Ok("your account has been locked, kindly contact system administrator");
+
+            _customerRepository.UpdateOnLoginSuccessfull(email);
+            return Ok("Login Successfull");
         }
 
         [HttpPost]
@@ -226,6 +230,6 @@ namespace WebApplication1.Controllers
                 errorMessage = "Invalid Gender";
 
             return errorMessage;
-        }
+        }       
     }
 }

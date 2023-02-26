@@ -12,6 +12,10 @@ namespace WebApplication1.DTO.InputDTO
         public string Email { get; set; }
         public string Password { get; set; }
         public string MobileNumber { get; set; }    
-        public string Country { get; set; }
+        public DateTime? LastFailedLoginDate { get; set; }    
+        public DateTime? LastSuccessfulLoginDate { get; set; }    
+        public int LoginFailedCount { get; set  ; }    
+        public bool IsLocked { get; set; }    
+        public string Country { get; set; } 
     }
 }       
