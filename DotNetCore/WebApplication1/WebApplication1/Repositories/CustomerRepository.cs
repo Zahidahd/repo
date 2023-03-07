@@ -34,17 +34,27 @@ namespace WebApplication1.Repositories
 
                 for (int i = 0; i < dataTable.Rows.Count; i++)
                 {
-                    CustomerDto customerDto = new()
-                    {
-                        Id = (int)dataTable.Rows[i]["Id"],
-                        FullName = (string)dataTable.Rows[i]["Name"],
-                        Gender = (GenderTypes)dataTable.Rows[i]["Gender"],
-                        Age = (int)dataTable.Rows[i]["Age"],
-                        Email = (string)dataTable.Rows[i]["Email"],
-                        Password = (string)dataTable.Rows[i]["Password"],
-                        MobileNumber = (string)dataTable.Rows[i]["MobileNumber"],
-                        Country = (string)dataTable.Rows[i]["Country"]
-                    };
+                    //Approch 1 - Using Object initializer
+
+                    //CustomerDto customerDto = new()
+                    //{
+                    //    Id = (int)dataTable.Rows[i]["Id"],
+                    //    FullName = (string)dataTable.Rows[i]["Name"],
+                    //    Gender = (GenderTypes)dataTable.Rows[i]["Gender"],
+                    //    Age = (int)dataTable.Rows[i]["Age"],
+                    //    Email = (string)dataTable.Rows[i]["Email"],
+                    //    Password = (string)dataTable.Rows[i]["Password"],
+                    //    MobileNumber = (string)dataTable.Rows[i]["MobileNumber"],
+                    //    Country = (string)dataTable.Rows[i]["Country"]
+                    //};
+
+                    //Approch 2 - Using Constructor
+                    CustomerDto customerDto = new(
+                        (int)dataTable.Rows[i]["Id"], (string)dataTable.Rows[i]["Name"], (GenderTypes)dataTable.Rows[i]["Gender"],
+                        (int)dataTable.Rows[i]["Age"], (string)dataTable.Rows[i]["Email"], (string)dataTable.Rows[i]["Password"],
+                        dataTable.Rows[i]["Mobile"] != DBNull.Value ? (string)dataTable.Rows[i]["Mobile"] : null,
+                        dataTable.Rows[i]["Country"] != DBNull.Value ? (string)dataTable.Rows[i]["Country"] : null);
+                  
                     customers.Add(customerDto);
                 }
                 return customers;
@@ -129,7 +139,7 @@ namespace WebApplication1.Repositories
         {
             using (SqlConnection sqlConnection = new(_connectionString))
             {
-                SqlDataAdapter sqlDataAdapter = new(@"SELECT * FROM Customers
+                SqlDataAdapter sqlDataAdapter = new(@"SELECT TOP 1 * FROM Customers
                         WHERE Email = @email AND Password = @password ", sqlConnection);
                 sqlDataAdapter.SelectCommand.Parameters.AddWithValue("@email", email);
                 sqlDataAdapter.SelectCommand.Parameters.AddWithValue("@password", password);
@@ -160,7 +170,6 @@ namespace WebApplication1.Repositories
                     return customerDto;
                 }
                 return null;
-
             }
         }
 
@@ -222,13 +231,26 @@ namespace WebApplication1.Repositories
             }
         }
 
+        public void UpdateNewPassword(string email, byte[] password)
+        {
+            using (SqlConnection sqlConnection = new(_connectionString))
+            {
+                string sqlQuery = @"UPDATE Customers SET Password = @newPassword
+                                    WHERE Email = @email";
+                SqlCommand sqlCommand = new(sqlQuery, sqlConnection);
+                sqlCommand.Parameters.AddWithValue("@email", email);
+                sqlCommand.Parameters.AddWithValue("@newPassword", password);
+                sqlConnection.Open();
+                sqlCommand.ExecuteNonQuery();
+                sqlConnection.Close();
+            }
+        }
+
         public int Add(CustomerDto customer)
         {
             using (SqlConnection sqlConnection = new(_connectionString))
             {
                 {
-                    byte[] hashValuePassword = StringHelper.StringToByteArray(customer.Password);
-
                     string sqlQuery = @"INSERT INTO Customers(Name, Gender, Age, Email, Password, Mobile, Country)
                             VALUES (@FullName, @Gender, @Age, @Email, @Password, @MobileNumber, @Country)
                             Select Scope_Identity()";
@@ -237,7 +259,7 @@ namespace WebApplication1.Repositories
                     sqlCommand.Parameters.AddWithValue("@Gender", customer.Gender);
                     sqlCommand.Parameters.AddWithValue("@Age", customer.Age);
                     sqlCommand.Parameters.AddWithValue("@Email", customer.Email);
-                    sqlCommand.Parameters.AddWithValue("@Password", hashValuePassword);
+                    sqlCommand.Parameters.AddWithValue("@Password", customer.HashValuePassword);
                     sqlCommand.Parameters.AddWithValue("@MobileNumber", customer.MobileNumber);
                     sqlCommand.Parameters.AddWithValue("@Country", customer.Country);
                     sqlConnection.Open();
@@ -253,8 +275,6 @@ namespace WebApplication1.Repositories
             //Approach #1  - Recommended
             using (SqlConnection sqlConnection = new(_connectionString))
             {
-                byte[] hashValuePassword = StringHelper.StringToByteArray(customer.Password);
-
                 string sqlQuery = @" UPDATE Customers SET Name = @FullName, Gender = @Gender,
                         Age = @Age, Email = @Email, Password = @Password, Mobile = @MobileNumber, Country = @Country
                         WHERE Id = @Id ";
@@ -264,7 +284,7 @@ namespace WebApplication1.Repositories
                 sqlCommand.Parameters.AddWithValue("@Gender", customer.Gender);
                 sqlCommand.Parameters.AddWithValue("@Age", customer.Age);
                 sqlCommand.Parameters.AddWithValue("@Email", customer.Email);
-                sqlCommand.Parameters.AddWithValue("@Password", hashValuePassword);
+                sqlCommand.Parameters.AddWithValue("@Password", customer.HashValuePassword);
                 sqlCommand.Parameters.AddWithValue("@MobileNumber", customer.MobileNumber);
                 sqlCommand.Parameters.AddWithValue("@Country", customer.Country);
                 sqlConnection.Open();

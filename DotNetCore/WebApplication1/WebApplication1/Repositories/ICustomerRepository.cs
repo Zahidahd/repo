@@ -14,6 +14,7 @@ namespace WebApplication1.Repositories
         public void UpdateOnLoginSuccessfull(string email);
         public int GetLoginFailedCount(string email);
         public void UpdateIsLocked(string email, bool isLocked = true);
+        public void UpdateNewPassword(string email, byte[] password);
         public int Add(CustomerDto customer);
         public void Update(CustomerDto customer);
         public string GetCustomerFullNameById(int customerId);
